@@ -1,0 +1,212 @@
+---
+services:
+
+# RADARR
+
+  radarr:
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: radarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+    volumes:
+      - /media/josh/Media1/Radarr/config:/config
+      - /media/josh/Media1/Radarr/movies:/movies #optional
+      - /media/josh/Media1/qbittorrent/downloads:/downloads #optional
+    ports:
+      - 7878:7878 #radarr
+    restart: unless-stopped
+    
+# SONARR
+
+  sonarr:
+    image: lscr.io/linuxserver/sonarr:latest
+    container_name: sonarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+    volumes:
+      - /media/josh/Media1/Sonarr/config:/config
+      - /media/josh/Media1/Sonarr/tvseries:/tv #optional
+      - /media/josh/Media1/qbittorrent/downloads:/downloads #optional
+    ports:
+      - 8989:8989 #sonarr
+    restart: unless-stopped
+    
+# PROWLARR
+
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:latest
+    container_name: prowlarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+    volumes:
+      - /media/josh/Media1/Prowlarr/config:/config
+    ports:
+      - 9696:9696 #prowlarr
+    restart: unless-stopped
+
+# BAZARR
+
+  bazarr:
+    image: lscr.io/linuxserver/bazarr:latest
+    container_name: bazarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+    volumes:
+      - /media/josh/Media1/Bazarr/config:/config
+      - /media/josh/Media1/Radarr/movies:/movies #optional
+      - /media/josh/Media1/Sonarr/tvseries:/tv #optional
+    ports:
+      - 6767:6767 #bazarr
+    restart: unless-stopped
+    
+# LIDARR *NOT ACTIVE*
+
+  # lidarr:
+  #   image: lscr.io/linuxserver/lidarr:latest
+  #   container_name: lidarr
+  #   environment:
+  #     - PUID=1000
+  #     - PGID=1000
+  #     - TZ=Etc/UTC
+  #   volumes:
+  #     - /media/josh/Media1/Lidarr/config:/config
+  #     - /media/josh/Media1/Lidarr/music:/music #optional
+  #     - /media/josh/Media1/qbittorrent/downloads:/downloads #optional
+  #   ports:
+  #     - 8686:8686 #lidarr
+  #   restart: unless-stopped
+    
+# READARR
+
+
+  readarr:
+    image: lscr.io/linuxserver/readarr:develop
+    container_name: readarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+    volumes:
+      - /media/josh/Media1/Readarr/config:/config
+      - /media/josh/Media1/Readarr/books:/books #optional
+      - /media/josh/Media1/qbittorrent/downloads:/downloads #optional
+    ports:
+      - 8787:8787 #readarr
+    restart: unless-stopped
+
+# TDARR *NOT ACTIVE*
+
+    # tdarr:
+    #   image: ghcr.io/haveagitgat/tdarr:latest
+    #   container_name: tdarr
+    #   environment:
+    #     - PUID=1000
+    #     - PGID=1000
+    #     - TZ=Etc/UTC
+    #     - UMASK_SET=002 # optional, matches LinuxServer defaults
+    #   volumes:
+    #     - /media/josh/Media1/Tdarr/config:/app/config
+    #     - /media/josh/Media1/Tdarr/server:/app/server
+    #     - /media/josh/Media1/Tdarr/transcode_cache:/app/transcode_cache # optional, for temp files
+    #     - /media/josh/Media1/Radarr/movies:/movies # optional, access to movies
+    #     - /media/josh/Media1/Sonarr/tvseries:/tv # optional, access to TV
+    #     - /media/josh/Media1/qbittorrent/downloads:/downloads # optional, access to downloads
+    #   ports:
+    #     - 8265:8265 # Tdarr WebUI
+    #     - 8266:8266 # Tdarr Server
+    #   restart: unless-stopped
+
+    
+# QBITTORRENT
+
+  qbittorrent:
+    image: lscr.io/linuxserver/qbittorrent:latest
+    container_name: qbittorrent
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+      - WEBUI_PORT=8080
+      - TORRENTING_PORT=6881
+    volumes:
+      - /media/josh/Media1/qbittorrent/config:/config
+      - /media/josh/Media1/qbittorrent/downloads:/downloads #optional
+    ports:
+      - 8080:8080 #qbittorrent
+      - 6881:6881 #qbittorrent
+      - 6881:6881/udp #qbittorrent
+    restart: unless-stopped
+    
+# JELLYFIN
+
+  jellyfin:
+    image: lscr.io/linuxserver/jellyfin:latest
+    container_name: jellyfin
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+    volumes:
+      - /media/josh/Media1/Jellyfin/config:/config
+      - /media/josh/Media1/Sonarr/tvseries:/data/tvshows
+      - /media/josh/Media1/Radarr/movies:/data/movies
+    ports:
+      - 8096:8096
+      - 8920:8920 #optional
+      - 7359:7359/udp #optional
+      - 1900:1900/udp #optional
+    restart: unless-stopped
+    
+# PLEX *NOT ACTIVE*
+
+  # plex:
+  #   image: lscr.io/linuxserver/plex:latest
+  #   container_name: plex
+  #   environment:
+  #     - PUID=1000
+  #     - PGID=1000
+  #     - TZ=Etc/UTC
+  #     - PLEX_CLAIM=claim-qzd5k-4vxayLxxSLsgsw
+  #     - ADVERTISE_IP=http://<your_ip>:32400  # Optional, if needed for remote access
+  #   volumes:
+  #     - /media/josh/Media1/Plex/config:/config
+  #     - /media/josh/Media1/Radarr/movies:/data/movies  # Radarr movies folder
+  #     - /media/josh/Media1/Sonarr/tvseries:/data/tvshows  # Sonarr TV shows folder
+  #     - /media/josh/Media1/Lidarr/music:/data/music  # Lidarr music folder
+  #   ports:
+  #     - 32400:32400  # Plex web UI
+  #     - 32469:32469  # Optional, Plex DLNA
+  #     - 3005:3005    # Optional, Plex Chromecast support
+  #     - 8324:8324    # Optional, Plex support for device streaming
+  #     - 32410:32410/udp # Optional, Plex discovery
+  #     - 32412:32412/udp # Optional, Plex discovery
+  #     - 32413:32413/udp # Optional, Plex discovery
+  #     - 32414:32414/udp # Optional, Plex discovery
+  #   restart: unless-stopped
+
+# AUDIOBOOKSHELF *NOT ACTIVE*
+
+  # audiobookshelf:
+  #   image: ghcr.io/advplyr/audiobookshelf:latest
+  #   container_name: audiobookshelf
+  #   environment:
+  #     - PUID=1000
+  #     - PGID=1000
+  #     - TZ=Etc/UTC
+  #   volumes:
+  #     - /media/josh/Media1/Audiobookshelf/config:/config
+  #     - /media/josh/Media1/Audiobookshelf/audiobooks:/data/audiobooks
+  #     #- /media/josh/Media1/Audiobookshelf/podcasts:/data/podcasts
+  #     - /media/josh/Media1/Audiobookshelf/metadata:/data/metadata
+
+  #   ports:
+  #     - 13378:80
+  #   restart: unless-stopped
