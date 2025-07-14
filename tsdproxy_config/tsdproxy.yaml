@@ -2,7 +2,7 @@ defaultproxyprovider: default
 docker:
     local:
         host: unix:///var/run/docker.sock
-        targethostname: 172.31.0.1
+        targethostname: 172.18.0.1
 files: {}
 tailscale:
     providers:

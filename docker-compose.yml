@@ -32,8 +32,8 @@ services:
     networks:
       - media
     labels:
-      - tsdproxy.enable=true
-      - tsdproxy.name=radarr
+      tsdproxy.enable: "true"
+      tsdproxy.name: "radarr"
 
   sonarr:
     image: lscr.io/linuxserver/sonarr:latest
@@ -52,8 +52,9 @@ services:
     networks:
       - media
     labels:
-      - tsdproxy.enable=true
-      - tsdproxy.name=sonarr
+      tsdproxy.enable: "true"
+      tsdproxy.name: "sonarr"
+
 
   prowlarr:
     image: lscr.io/linuxserver/prowlarr:latest
@@ -70,8 +71,8 @@ services:
     networks:
       - media
     labels:
-      - tsdproxy.enable=true
-      - tsdproxy.name=prowlarr
+      tsdproxy.enable: "true"
+      tsdproxy.name: "prowlarr"
 
   bazarr:
     image: lscr.io/linuxserver/bazarr:latest
@@ -90,8 +91,8 @@ services:
     networks:
       - media
     labels:
-      - tsdproxy.enable=true
-      - tsdproxy.name=bazarr
+      tsdproxy.enable: "true"
+      tsdproxy.name: "bazarr"
 
   # lidarr:
   #   image: lscr.io/linuxserver/lidarr:latest
@@ -127,8 +128,8 @@ services:
     networks:
       - media
     labels:
-      - tsdproxy.enable=true
-      - tsdproxy.name=readarr
+      tsdproxy.enable: "true"
+      tsdproxy.name: "readarr"
 
   # tdarr:
   #   image: ghcr.io/haveagitgat/tdarr:latest
@@ -172,8 +173,8 @@ services:
     networks:
       - media
     labels:
-      - tsdproxy.enable=true
-      - tsdproxy.name=qbittorrent
+      tsdproxy.enable: "true"
+      tsdproxy.name: "qbittorrent"
 
   jellyfin:
     image: lscr.io/linuxserver/jellyfin:latest
@@ -195,8 +196,8 @@ services:
     networks:
       - media
     labels:
-      - tsdproxy.enable=true
-      - tsdproxy.name=jellyfin
+      tsdproxy.enable: "true"
+      tsdproxy.name: "jellyfin"
 
   # plex:
   #   image: lscr.io/linuxserver/plex:latest
