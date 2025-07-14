@@ -1,19 +1,15 @@
-version: "3.8"
-
 services:
 
-  tsdproxy:
-    image: almeidapaulopt/tsdproxy:1
-    container_name: tsdproxy
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - tsdproxy_data:/data
-      - ./tsdproxy_config:/config
-    environment:
-      - TZ=${TZ}
-    restart: unless-stopped
-    networks:
-      - media
+  # tsdproxy:
+  #   image: almeidapaulopt/tsdproxy:1
+  #   container_name: tsdproxy
+  #   volumes:
+  #     - /var/run/docker.sock:/var/run/docker.sock
+  #     - tsdproxy_data:/data
+  #     - ./tsdproxy_config:/config
+  #   environment:
+  #     - TZ=${TZ}
+  #   restart: unless-stopped
 
   radarr:
     image: lscr.io/linuxserver/radarr:latest
@@ -29,11 +25,9 @@ services:
     ports:
       - 7878:7878
     restart: unless-stopped
-    networks:
-      - media
-    labels:
-      tsdproxy.enable: "true"
-      tsdproxy.name: "radarr"
+    # labels:
+      # tsdproxy.enable: "true"
+      # tsdproxy.name: "radarr"
 
   sonarr:
     image: lscr.io/linuxserver/sonarr:latest
@@ -49,11 +43,9 @@ services:
     ports:
       - 8989:8989
     restart: unless-stopped
-    networks:
-      - media
-    labels:
-      tsdproxy.enable: "true"
-      tsdproxy.name: "sonarr"
+    # labels:
+      # tsdproxy.enable: "true"
+      # tsdproxy.name: "sonarr"
 
 
   prowlarr:
@@ -68,11 +60,9 @@ services:
     ports:
       - 9696:9696
     restart: unless-stopped
-    networks:
-      - media
-    labels:
-      tsdproxy.enable: "true"
-      tsdproxy.name: "prowlarr"
+    # labels:
+      # tsdproxy.enable: "true"
+      # tsdproxy.name: "prowlarr"
 
   bazarr:
     image: lscr.io/linuxserver/bazarr:latest
@@ -88,11 +78,9 @@ services:
     ports:
       - 6767:6767
     restart: unless-stopped
-    networks:
-      - media
-    labels:
-      tsdproxy.enable: "true"
-      tsdproxy.name: "bazarr"
+    # labels:
+      # tsdproxy.enable: "true"
+      # tsdproxy.name: "bazarr"
 
   # lidarr:
   #   image: lscr.io/linuxserver/lidarr:latest
@@ -108,8 +96,6 @@ services:
   #   ports:
   #     - 8686:8686
   #   restart: unless-stopped
-  #   networks:
-  #     - media
 
   readarr:
     image: lscr.io/linuxserver/readarr:develop
@@ -125,11 +111,9 @@ services:
     ports:
       - 8787:8787
     restart: unless-stopped
-    networks:
-      - media
-    labels:
-      tsdproxy.enable: "true"
-      tsdproxy.name: "readarr"
+    # labels:
+      # tsdproxy.enable: "true"
+      # tsdproxy.name: "readarr"
 
   # tdarr:
   #   image: ghcr.io/haveagitgat/tdarr:latest
@@ -150,8 +134,6 @@ services:
   #     - 8265:8265
   #     - 8266:8266
   #   restart: unless-stopped
-  #   networks:
-  #     - media
 
   qbittorrent:
     image: lscr.io/linuxserver/qbittorrent:latest
@@ -170,11 +152,9 @@ services:
       - 6881:6881
       - 6881:6881/udp
     restart: unless-stopped
-    networks:
-      - media
-    labels:
-      tsdproxy.enable: "true"
-      tsdproxy.name: "qbittorrent"
+    # labels:
+    #   tsdproxy.enable: "true"
+    #   tsdproxy.name: "qbittorrent"
 
   jellyfin:
     image: lscr.io/linuxserver/jellyfin:latest
@@ -193,11 +173,9 @@ services:
       - 7359:7359/udp
       - 1900:1900/udp
     restart: unless-stopped
-    networks:
-      - media
-    labels:
-      tsdproxy.enable: "true"
-      tsdproxy.name: "jellyfin"
+    # labels:
+    #   tsdproxy.enable: "true"
+    #   tsdproxy.name: "jellyfin"
 
   # plex:
   #   image: lscr.io/linuxserver/plex:latest
@@ -223,8 +201,6 @@ services:
   #     - 32413:32413/udp
   #     - 32414:32414/udp
   #   restart: unless-stopped
-  #   networks:
-  #     - media
 
   # audiobookshelf:
   #   image: ghcr.io/advplyr/audiobookshelf:latest
@@ -241,12 +217,6 @@ services:
   #   ports:
   #     - 13378:80
   #   restart: unless-stopped
-  #   networks:
-  #     - media
 
-networks:
-  media:
-    driver: bridge
-
-volumes:
-  tsdproxy_data:
+# volumes:
+#   tsdproxy_data:
