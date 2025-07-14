@@ -1,212 +1,214 @@
----
-services:
+version: "3.8"
 
-# RADARR
+services:
 
   radarr:
     image: lscr.io/linuxserver/radarr:latest
     container_name: radarr
     environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Etc/UTC
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
     volumes:
-      - /media/josh/Media1/Radarr/config:/config
-      - /media/josh/Media1/Radarr/movies:/movies #optional
-      - /media/josh/Media1/qbittorrent/downloads:/downloads #optional
+      - ${RADARR_PATH}/config:/config
+      - ${RADARR_PATH}/movies:/movies #optional
+      - ${QBITTORRENT_PATH}/downloads:/downloads #optional
     ports:
-      - 7878:7878 #radarr
+      - 7878:7878
     restart: unless-stopped
-    
-# SONARR
+    networks:
+      - media
 
   sonarr:
     image: lscr.io/linuxserver/sonarr:latest
     container_name: sonarr
     environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Etc/UTC
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
     volumes:
-      - /media/josh/Media1/Sonarr/config:/config
-      - /media/josh/Media1/Sonarr/tvseries:/tv #optional
-      - /media/josh/Media1/qbittorrent/downloads:/downloads #optional
+      - ${SONARR_PATH}/config:/config
+      - ${SONARR_PATH}/tvseries:/tv #optional
+      - ${QBITTORRENT_PATH}/downloads:/downloads #optional
     ports:
-      - 8989:8989 #sonarr
+      - 8989:8989
     restart: unless-stopped
-    
-# PROWLARR
+    networks:
+      - media
 
   prowlarr:
     image: lscr.io/linuxserver/prowlarr:latest
     container_name: prowlarr
     environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Etc/UTC
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
     volumes:
-      - /media/josh/Media1/Prowlarr/config:/config
+      - ${PROWLARR_PATH}/config:/config
     ports:
-      - 9696:9696 #prowlarr
+      - 9696:9696
     restart: unless-stopped
-
-# BAZARR
+    networks:
+      - media
 
   bazarr:
     image: lscr.io/linuxserver/bazarr:latest
     container_name: bazarr
     environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Etc/UTC
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
     volumes:
-      - /media/josh/Media1/Bazarr/config:/config
-      - /media/josh/Media1/Radarr/movies:/movies #optional
-      - /media/josh/Media1/Sonarr/tvseries:/tv #optional
+      - ${BAZARR_PATH}/config:/config
+      - ${RADARR_PATH}/movies:/movies #optional
+      - ${SONARR_PATH}/tvseries:/tv #optional
     ports:
-      - 6767:6767 #bazarr
+      - 6767:6767
     restart: unless-stopped
-    
-# LIDARR *NOT ACTIVE*
+    networks:
+      - media
 
   # lidarr:
   #   image: lscr.io/linuxserver/lidarr:latest
   #   container_name: lidarr
   #   environment:
-  #     - PUID=1000
-  #     - PGID=1000
-  #     - TZ=Etc/UTC
+  #     - PUID=${PUID}
+  #     - PGID=${PGID}
+  #     - TZ=${TZ}
   #   volumes:
-  #     - /media/josh/Media1/Lidarr/config:/config
-  #     - /media/josh/Media1/Lidarr/music:/music #optional
-  #     - /media/josh/Media1/qbittorrent/downloads:/downloads #optional
+  #     - ${MEDIA_ROOT}/Lidarr/config:/config
+  #     - ${MEDIA_ROOT}/Lidarr/music:/music #optional
+  #     - ${QBITTORRENT_PATH}/downloads:/downloads #optional
   #   ports:
-  #     - 8686:8686 #lidarr
+  #     - 8686:8686
   #   restart: unless-stopped
-    
-# READARR
-
+  #   networks:
+  #     - media
 
   readarr:
     image: lscr.io/linuxserver/readarr:develop
     container_name: readarr
     environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Etc/UTC
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
     volumes:
-      - /media/josh/Media1/Readarr/config:/config
-      - /media/josh/Media1/Readarr/books:/books #optional
-      - /media/josh/Media1/qbittorrent/downloads:/downloads #optional
+      - ${READARR_PATH}/config:/config
+      - ${READARR_PATH}/books:/books #optional
+      - ${QBITTORRENT_PATH}/downloads:/downloads #optional
     ports:
-      - 8787:8787 #readarr
+      - 8787:8787
     restart: unless-stopped
+    networks:
+      - media
 
-# TDARR *NOT ACTIVE*
-
-    # tdarr:
-    #   image: ghcr.io/haveagitgat/tdarr:latest
-    #   container_name: tdarr
-    #   environment:
-    #     - PUID=1000
-    #     - PGID=1000
-    #     - TZ=Etc/UTC
-    #     - UMASK_SET=002 # optional, matches LinuxServer defaults
-    #   volumes:
-    #     - /media/josh/Media1/Tdarr/config:/app/config
-    #     - /media/josh/Media1/Tdarr/server:/app/server
-    #     - /media/josh/Media1/Tdarr/transcode_cache:/app/transcode_cache # optional, for temp files
-    #     - /media/josh/Media1/Radarr/movies:/movies # optional, access to movies
-    #     - /media/josh/Media1/Sonarr/tvseries:/tv # optional, access to TV
-    #     - /media/josh/Media1/qbittorrent/downloads:/downloads # optional, access to downloads
-    #   ports:
-    #     - 8265:8265 # Tdarr WebUI
-    #     - 8266:8266 # Tdarr Server
-    #   restart: unless-stopped
-
-    
-# QBITTORRENT
+  # tdarr:
+  #   image: ghcr.io/haveagitgat/tdarr:latest
+  #   container_name: tdarr
+  #   environment:
+  #     - PUID=${PUID}
+  #     - PGID=${PGID}
+  #     - TZ=${TZ}
+  #     - UMASK_SET=002
+  #   volumes:
+  #     - ${MEDIA_ROOT}/Tdarr/config:/app/config
+  #     - ${MEDIA_ROOT}/Tdarr/server:/app/server
+  #     - ${MEDIA_ROOT}/Tdarr/transcode_cache:/app/transcode_cache
+  #     - ${RADARR_PATH}/movies:/movies
+  #     - ${SONARR_PATH}/tvseries:/tv
+  #     - ${QBITTORRENT_PATH}/downloads:/downloads
+  #   ports:
+  #     - 8265:8265
+  #     - 8266:8266
+  #   restart: unless-stopped
+  #   networks:
+  #     - media
 
   qbittorrent:
     image: lscr.io/linuxserver/qbittorrent:latest
     container_name: qbittorrent
     environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Etc/UTC
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
       - WEBUI_PORT=8080
       - TORRENTING_PORT=6881
     volumes:
-      - /media/josh/Media1/qbittorrent/config:/config
-      - /media/josh/Media1/qbittorrent/downloads:/downloads #optional
+      - ${QBITTORRENT_PATH}/config:/config
+      - ${QBITTORRENT_PATH}/downloads:/downloads #optional
     ports:
-      - 8080:8080 #qbittorrent
-      - 6881:6881 #qbittorrent
-      - 6881:6881/udp #qbittorrent
+      - 8080:8080
+      - 6881:6881
+      - 6881:6881/udp
     restart: unless-stopped
-    
-# JELLYFIN
+    networks:
+      - media
 
   jellyfin:
     image: lscr.io/linuxserver/jellyfin:latest
     container_name: jellyfin
     environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Etc/UTC
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
     volumes:
-      - /media/josh/Media1/Jellyfin/config:/config
-      - /media/josh/Media1/Sonarr/tvseries:/data/tvshows
-      - /media/josh/Media1/Radarr/movies:/data/movies
+      - ${JELLYFIN_PATH}/config:/config
+      - ${SONARR_PATH}/tvseries:/data/tvshows
+      - ${RADARR_PATH}/movies:/data/movies
     ports:
       - 8096:8096
-      - 8920:8920 #optional
-      - 7359:7359/udp #optional
-      - 1900:1900/udp #optional
+      - 8920:8920
+      - 7359:7359/udp
+      - 1900:1900/udp
     restart: unless-stopped
-    
-# PLEX *NOT ACTIVE*
+    networks:
+      - media
 
   # plex:
   #   image: lscr.io/linuxserver/plex:latest
   #   container_name: plex
   #   environment:
-  #     - PUID=1000
-  #     - PGID=1000
-  #     - TZ=Etc/UTC
+  #     - PUID=${PUID}
+  #     - PGID=${PGID}
+  #     - TZ=${TZ}
   #     - PLEX_CLAIM=claim-qzd5k-4vxayLxxSLsgsw
-  #     - ADVERTISE_IP=http://<your_ip>:32400  # Optional, if needed for remote access
+  #     - ADVERTISE_IP=http://<your_ip>:32400
   #   volumes:
-  #     - /media/josh/Media1/Plex/config:/config
-  #     - /media/josh/Media1/Radarr/movies:/data/movies  # Radarr movies folder
-  #     - /media/josh/Media1/Sonarr/tvseries:/data/tvshows  # Sonarr TV shows folder
-  #     - /media/josh/Media1/Lidarr/music:/data/music  # Lidarr music folder
+  #     - ${MEDIA_ROOT}/Plex/config:/config
+  #     - ${RADARR_PATH}/movies:/data/movies
+  #     - ${SONARR_PATH}/tvseries:/data/tvshows
+  #     - ${MEDIA_ROOT}/Lidarr/music:/data/music
   #   ports:
-  #     - 32400:32400  # Plex web UI
-  #     - 32469:32469  # Optional, Plex DLNA
-  #     - 3005:3005    # Optional, Plex Chromecast support
-  #     - 8324:8324    # Optional, Plex support for device streaming
-  #     - 32410:32410/udp # Optional, Plex discovery
-  #     - 32412:32412/udp # Optional, Plex discovery
-  #     - 32413:32413/udp # Optional, Plex discovery
-  #     - 32414:32414/udp # Optional, Plex discovery
+  #     - 32400:32400
+  #     - 32469:32469
+  #     - 3005:3005
+  #     - 8324:8324
+  #     - 32410:32410/udp
+  #     - 32412:32412/udp
+  #     - 32413:32413/udp
+  #     - 32414:32414/udp
   #   restart: unless-stopped
-
-# AUDIOBOOKSHELF *NOT ACTIVE*
+  #   networks:
+  #     - media
 
   # audiobookshelf:
   #   image: ghcr.io/advplyr/audiobookshelf:latest
   #   container_name: audiobookshelf
   #   environment:
-  #     - PUID=1000
-  #     - PGID=1000
-  #     - TZ=Etc/UTC
+  #     - PUID=${PUID}
+  #     - PGID=${PGID}
+  #     - TZ=${TZ}
   #   volumes:
-  #     - /media/josh/Media1/Audiobookshelf/config:/config
-  #     - /media/josh/Media1/Audiobookshelf/audiobooks:/data/audiobooks
-  #     #- /media/josh/Media1/Audiobookshelf/podcasts:/data/podcasts
-  #     - /media/josh/Media1/Audiobookshelf/metadata:/data/metadata
-
+  #     - ${MEDIA_ROOT}/Audiobookshelf/config:/config
+  #     - ${MEDIA_ROOT}/Audiobookshelf/audiobooks:/data/audiobooks
+  #     #- ${MEDIA_ROOT}/Audiobookshelf/podcasts:/data/podcasts
+  #     - ${MEDIA_ROOT}/Audiobookshelf/metadata:/data/metadata
   #   ports:
   #     - 13378:80
   #   restart: unless-stopped
+  #   networks:
+  #     - media
+
+networks:
+  media:
+    driver: bridge
