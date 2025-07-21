@@ -7,7 +7,7 @@ services:
     container_name: prowlarr
     hostname: prowlarr
     volumes:
-      - ${ARRPATH}Prowlarr/config:/config
+      - /opt/prowlarr_config:/config
       - ${ARRPATH}Prowlarr/backup:/data/Backup
       - ${ARRPATH}Downloads:/downloads
     ports:
@@ -23,7 +23,7 @@ services:
     container_name: sonarr
     hostname: sonarr
     volumes:
-      - ${ARRPATH}Sonarr/config:/config
+      - /opt/sonarr_config:/config
       - ${ARRPATH}Sonarr/backup:/data/Backup
       - ${ARRPATH}Sonarr/tvseries:/data/tvshows
       - ${ARRPATH}Downloads:/downloads
@@ -40,7 +40,7 @@ services:
     container_name: radarr
     hostname: radarr
     volumes:
-      - ${ARRPATH}Radarr/config:/config
+      - /opt/radarr_config:/config
       - ${ARRPATH}Radarr/movies:/data/movies
       - ${ARRPATH}Radarr/backup:/data/Backup
       - ${ARRPATH}Downloads:/downloads
@@ -50,22 +50,6 @@ services:
     env_file:
       - '.env'
       
-# LIDARR *INACTIVE*
-                                             
-  # lidarr:
-  #   image: linuxserver/lidarr:latest
-  #   container_name: lidarr
-  #   hostname: lidarr
-  #   volumes:
-  #     - ${ARRPATH}Lidarr/config:/config
-  #     - ${ARRPATH}Lidarr/music:/data/musicfolder
-  #     - ${ARRPATH}Downloads:/downloads
-  #   ports:
-  #     - 8686:8686
-  #   restart: unless-stopped
-  #   env_file:
-  #     - '.env'
-      
 # READARR
                                                                                                                    
   readarr:
@@ -73,7 +57,7 @@ services:
     container_name: readarr
     hostname: readarr
     volumes:
-      - ${ARRPATH}Readarr/config:/config
+      - /opt/readarr_config:/config
       - ${ARRPATH}Readarr/books:/data/books
       - ${ARRPATH}Downloads:/downloads
     ports:
@@ -94,7 +78,6 @@ services:
       - '1900:1900/udp'   # DLNA port
     volumes:
       - /opt/jellyfin_config:/config
-     # - ${ARRPATH}Jellyfin/config:/config
       - ${ARRPATH}Radarr/movies:/data/Movies
       - ${ARRPATH}Sonarr/tvseries:/data/TVShows
       - ${ARRPATH}Lidarr/music:/data/Music
@@ -135,7 +118,7 @@ services:
     labels:
       - "com.centurylinklabs.watchtower.enable=false"
     volumes:
-      - ${ARRPATH}qbittorrent/config:/config
+      - /opt/qbittorrent_config:/config
       - ${ARRPATH}qbittorrent/downloads:/downloads
     ports:
       - 8080:8080
