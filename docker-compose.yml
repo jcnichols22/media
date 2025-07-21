@@ -9,7 +9,8 @@ services:
     volumes:
       - /opt/prowlarr_config:/config
       - ${ARRPATH}Prowlarr/backup:/data/Backup
-      - ${ARRPATH}Downloads:/downloads
+      - ${ARRPATH}qbittorrent/downloads:/downloads
+
     ports:
       - 9696:9696
     restart: unless-stopped
@@ -26,7 +27,7 @@ services:
       - /opt/sonarr_config:/config
       - ${ARRPATH}Sonarr/backup:/data/Backup
       - ${ARRPATH}Sonarr/tvseries:/data/tvshows
-      - ${ARRPATH}Downloads:/downloads
+      - ${ARRPATH}qbittorrent/downloads:/downloads
     ports:
       - 8989:8989
     restart: unless-stopped
@@ -43,7 +44,7 @@ services:
       - /opt/radarr_config:/config
       - ${ARRPATH}Radarr/movies:/data/movies
       - ${ARRPATH}Radarr/backup:/data/Backup
-      - ${ARRPATH}Downloads:/downloads
+      - ${ARRPATH}qbittorrent/downloads:/downloads
     ports:
       - 7878:7878
     restart: unless-stopped
@@ -59,7 +60,7 @@ services:
     volumes:
       - /opt/readarr_config:/config
       - ${ARRPATH}Readarr/books:/data/books
-      - ${ARRPATH}Downloads:/downloads
+      - ${ARRPATH}qbittorrent/downloads:/downloads
     ports:
       - 8787:8787
     restart: unless-stopped
