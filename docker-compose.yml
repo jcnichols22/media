@@ -93,7 +93,8 @@ services:
       - '7359:7359/udp'   # Network discovery
       - '1900:1900/udp'   # DLNA port
     volumes:
-      - ${ARRPATH}Jellyfin/config:/config
+      - /opt/jellyfin_config:/config
+     # - ${ARRPATH}Jellyfin/config:/config
       - ${ARRPATH}Radarr/movies:/data/Movies
       - ${ARRPATH}Sonarr/tvseries:/data/TVShows
       - ${ARRPATH}Lidarr/music:/data/Music
@@ -109,21 +110,20 @@ services:
   jellyseerr:
     image: fallenbagel/jellyseerr:latest
     container_name: jellyseerr
-    environment:
-      - LOG_LEVEL=debug
+    hostname: jellyseerr
     ports:
-      - 5055:5055
+      - "5055:5055"
     volumes:
-      - ${ARRPATH}Jellyseerr/config:/app/config
-    healthcheck:
-      test: wget --no-verbose --tries=1 --spider http://localhost:5055/api/v1/status || exit 1
-      start_period: 20s
-      timeout: 3s
-      interval: 15s
-      retries: 3
+      - /opt/jellyseerr_config:/app/config
+      - ${ARRPATH}Jellyfin/config:/app/jellyfin # optional read-only mapping to let Jellyseerr read Jellyfin's config
+      - ${ARRPATH}Radarr/movies:/data/Movies   # Allow importing/requesting files
+      - ${ARRPATH}Sonarr/tvseries:/data/TVShows
+      - ${ARRPATH}Lidarr/music:/data/Music     # If music requests supported (optional)
+      - ${ARRPATH}Readarr/books:/data/Books    # If books requests (future support/optional)
     env_file:
       - '.env'
     restart: unless-stopped
+
           
 #  qBittorrent                                                                                          
                                                                                              
