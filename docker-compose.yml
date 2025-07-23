@@ -138,9 +138,6 @@ services:
       - 8265:8265 # web UI
       - 8266:8266 # server port
     environment:
-      - TZ=Europe/London
-      - PUID=${PUID}
-      - PGID=${PGID}
       - UMASK_SET=002
       - serverIP=0.0.0.0
       - serverPort=8266
@@ -154,14 +151,15 @@ services:
       - maxLogSizeMB=10
       - cronPluginUpdate=
     volumes:
-      - /opt/tdarr_config:/app/configs
-      - ${ARRPATH}Tdarr/server:/app/server
-      - ${ARRPATH}Tdarr/logs:/app/logs
+      - /opt/tdarr/server:/app/server
+      - /opt/tdarr/configs:/app/configs
+      - /opt/tdarr/logs:/app/logs
       - /media:/media
       - /transcode_cache:/temp
-
     devices:
       - /dev/dri:/dev/dri  
+    env_file:
+      - '.env'
 
   tdarr-node:
     container_name: tdarr-node
@@ -169,9 +167,6 @@ services:
     restart: unless-stopped
     network_mode: service:tdarr  # Shares network with tdarr server
     environment:
-      - TZ=Europe/London
-      - PUID=${PUID}
-      - PGID=${PGID}
       - UMASK_SET=002
       - nodeName=MyExternalNode
       - serverIP=0.0.0.0
@@ -190,10 +185,11 @@ services:
       - healthcheckgpuWorkers=1
       - healthcheckcpuWorkers=1
     volumes:
-      - /opt/tdarr_node_config:/app/configs
-      - ${ARRPATH}TdarrNode/logs:/app/logs
+      - /opt/tdarr/configs:/app/configs
+      - /opt/tdarr/logs:/app/logs
       - /media:/media
       - /transcode_cache:/temp
     devices:
-      - /dev/dri:/dev/dri  # Intel QuickSync device passed
-    # Remove Nvidia GPU reservations
+      - /dev/dri:/dev/dri  # Intel QuickSync
+    env_file:
+      - '.env'
