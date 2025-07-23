@@ -128,4 +128,70 @@ services:
     env_file:
       - '.env'
 
+  tdarr:
+    container_name: tdarr
+    image: ghcr.io/haveagitgat/tdarr_acc:latest  # Intel QuickSync enabled image
+    restart: unless-stopped
+    network_mode: bridge
+    ports:
+      - 8265:8265 # web UI
+      - 8266:8266 # server port
+    environment:
+      - TZ=Europe/London
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - UMASK_SET=002
+      - serverIP=0.0.0.0
+      - serverPort=8266
+      - webUIPort=8265
+      - internalNode=true
+      - inContainer=true
+      - ffmpegVersion=7
+      - nodeName=MyInternalNode
+      - auth=false
+      - openBrowser=true
+      - maxLogSizeMB=10
+      - cronPluginUpdate=
+    volumes:
+      - /tdarr/server:/app/server
+      - /tdarr/configs:/app/configs
+      - /tdarr/logs:/app/logs
+      - /media:/media
+      - /transcode_cache:/temp
+    devices:
+      - /dev/dri:/dev/dri  
 
+  tdarr-node:
+    container_name: tdarr-node
+    image: ghcr.io/haveagitgat/tdarr_node_acc:latest  # Intel QuickSync enabled node
+    restart: unless-stopped
+    network_mode: service:tdarr  # Shares network with tdarr server
+    environment:
+      - TZ=Europe/London
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - UMASK_SET=002
+      - nodeName=MyExternalNode
+      - serverIP=0.0.0.0
+      - serverPort=8266
+      - inContainer=true
+      - ffmpegVersion=7
+      - nodeType=mapped
+      - priority=-1
+      - cronPluginUpdate=
+      - apiKey=
+      - maxLogSizeMB=10
+      - pollInterval=2000
+      - startPaused=false
+      - transcodegpuWorkers=1  # Will use QuickSync via VA-API
+      - transcodecpuWorkers=2
+      - healthcheckgpuWorkers=1
+      - healthcheckcpuWorkers=1
+    volumes:
+      - /tdarr/configs:/app/configs
+      - /tdarr/logs:/app/logs
+      - /media:/media
+      - /transcode_cache:/temp
+    devices:
+      - /dev/dri:/dev/dri  # Intel QuickSync device passed
+    # Remove Nvidia GPU reservations
