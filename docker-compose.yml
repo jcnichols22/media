@@ -201,11 +201,11 @@ services:
     ports:
       - "8090:8080"
     volumes:
-      - ${ARRPATH}ARM/home:/arm
-      - ${ARRPATH}ARM/logs:/data/logs
-      - ${ARRPATH}ARM/movies:/data/Movies   
-      - ${ARRPATH}Sonarr/tvseries:/data/TVShows
-      - ${ARRPATH}ARM/config:/data/config
+      - ${ARRPATH}ARM/home:/home/arm
+      - ${ARRPATH}ARM/Music:/home/arm/Music
+      - ${ARRPATH}ARM/logs:/home/arm/logs
+      - ${ARRPATH}ARM/media:/home/arm/media
+      - ${ARRPATH}ARM/config:/etc/arm/config
     devices:
       - /dev/sr0:/dev/sr0
       - /dev/sr1:/dev/sr1
