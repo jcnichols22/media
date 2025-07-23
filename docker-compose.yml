@@ -193,3 +193,25 @@ services:
       - /dev/dri:/dev/dri  # Intel QuickSync
     env_file:
       - '.env'
+
+# AUTOMATIC RIPPING MACHINE (ARM)
+  arm-rippers:
+    image: 1337server/automatic-ripping-machine:latest
+    container_name: arm-rippers
+    ports:
+      - "8090:8080"
+    volumes:
+      - ${ARRPATH}ARM/home:/arm
+      - ${ARRPATH}ARM/logs:/data/logs
+      - ${ARRPATH}ARM/movies:/data/Movies   
+      - ${ARRPATH}Sonarr/tvseries:/data/TVShows
+      - ${ARRPATH}ARM/config:/data/config
+    devices:
+      - /dev/sr0:/dev/sr0
+      - /dev/sr1:/dev/sr1
+      - /dev/sr2:/dev/sr2
+      - /dev/sr3:/dev/sr3
+    privileged: true
+    restart: always
+    env_file:
+      - '.env'
