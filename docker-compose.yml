@@ -130,6 +130,7 @@ services:
 
   tdarr:
     container_name: tdarr
+    hostname: tdarr
     image: ghcr.io/haveagitgat/tdarr_acc:latest  # Intel QuickSync enabled image
     restart: unless-stopped
     network_mode: bridge
@@ -153,16 +154,18 @@ services:
       - maxLogSizeMB=10
       - cronPluginUpdate=
     volumes:
-      - /tdarr/server:/app/server
-      - /tdarr/configs:/app/configs
-      - /tdarr/logs:/app/logs
+      - /opt/tdarr_config:/app/configs
+      - ${ARRPATH}Tdarr/server:/app/server
+      - ${ARRPATH}Tdarr/logs:/app/logs
       - /media:/media
       - /transcode_cache:/temp
+
     devices:
       - /dev/dri:/dev/dri  
 
   tdarr-node:
     container_name: tdarr-node
+    hostname: tdarr-node
     image: ghcr.io/haveagitgat/tdarr_node_acc:latest  # Intel QuickSync enabled node
     restart: unless-stopped
     network_mode: service:tdarr  # Shares network with tdarr server
@@ -188,8 +191,8 @@ services:
       - healthcheckgpuWorkers=1
       - healthcheckcpuWorkers=1
     volumes:
-      - /tdarr/configs:/app/configs
-      - /tdarr/logs:/app/logs
+      - /opt/tdarr_node_config:/app/configs
+      - ${ARRPATH}TdarrNode/logs:/app/logs
       - /media:/media
       - /transcode_cache:/temp
     devices:
