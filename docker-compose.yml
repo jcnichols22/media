@@ -154,7 +154,7 @@ services:
       - /opt/tdarr/server:/app/server
       - /opt/tdarr/configs:/app/configs
       - /opt/tdarr/logs:/app/logs
-      - /media:/media
+      - ${ARRPATH}:/media
       - /transcode_cache:/temp
     devices:
       - /dev/dri:/dev/dri  
@@ -187,7 +187,7 @@ services:
     volumes:
       - /opt/tdarr/configs:/app/configs
       - /opt/tdarr/logs:/app/logs
-      - /media:/media
+      - ${ARRPATH}:/media
       - /transcode_cache:/temp
     devices:
       - /dev/dri:/dev/dri  # Intel QuickSync
