@@ -45,6 +45,7 @@ services:
       - ${ARRPATH}Radarr/movies:/data/movies
       - ${ARRPATH}Radarr/backup:/data/Backup
       - ${ARRPATH}qbittorrent/downloads:/downloads
+      - ${ARRPATH}ARM/media/completed/movies:/arm-completed
     ports:
       - 7878:7878
     restart: unless-stopped
