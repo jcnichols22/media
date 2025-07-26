@@ -16,6 +16,23 @@ services:
     restart: unless-stopped
     env_file:
       - '.env'
+
+# Bazarr
+
+  bazarr:
+    image: linuxserver/bazarr:latest
+    container_name: bazarr
+    hostname: bazarr
+    volumes:
+      - /opt/bazarr_config:/config
+      - ${ARRPATH}Sonarr/tvseries:/data/tvshows        
+      - ${ARRPATH}Radarr/movies:/data/movies           
+    ports:
+      - 6767:6767
+    restart: unless-stopped
+    env_file:
+      - '.env'
+
       
 # SONARR                                               
       
