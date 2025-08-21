@@ -69,18 +69,19 @@ services:
     env_file:
       - '.env'
       
-# READARR
-                                                                                                                   
-  readarr:
-    image: linuxserver/readarr:develop
-    container_name: readarr
-    hostname: readarr
-    volumes:
-      - /opt/readarr_config:/config
-      - ${ARRPATH}Readarr/books:/data/books
-      - ${ARRPATH}qbittorrent/downloads:/downloads
+# LAZYLIBRARIAN
+  lazylibrarian:
+    image: lscr.io/linuxserver/lazylibrarian:latest
+    container_name: lazylibrarian
+    hostname: lazylibrarian
     ports:
-      - 8787:8787
+      - 5299:5299
+    volumes:
+      - /opt/lazylibrarian_config:/config
+      - ${ARRPATH}Lazylibrarian/books:/books
+      - ${ARRPATH}qbittorrent/downloads:/downloads
+    environment:
+      - DOCKER_MODS=linuxserver/mods:universal-calibre|linuxserver/mods:lazylibrarian-ffmpeg # optional
     restart: unless-stopped
     env_file:
       - '.env'
