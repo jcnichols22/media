@@ -234,3 +234,32 @@ services:
     restart: always
     env_file:
       - '.env'
+
+# CALIBRE
+  calibre:
+    image: lscr.io/linuxserver/calibre:latest
+    container_name: calibre
+    hostname: calibre
+    ports:
+      - 8081:8080  # Web UI
+      - 8082:8181  # Content server
+    volumes:
+      - /opt/calibre_config:/config
+      - ${ARRPATH}Lazylibrarian/books:/books
+    restart: unless-stopped
+    env_file:
+      - '.env'
+
+# CALIBRE-WEB
+  calibre-web:
+    image: lscr.io/linuxserver/calibre-web:latest
+    container_name: calibre-web
+    hostname: calibre-web
+    ports:
+      - 8083:8083
+    volumes:
+      - /opt/calibre-web_config:/config
+      - ${ARRPATH}Lazylibrarian/books:/books
+    restart: unless-stopped
+    env_file:
+      - '.env'
