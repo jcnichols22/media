@@ -246,6 +246,7 @@ services:
     volumes:
       - /opt/calibre_config:/config
       - ${ARRPATH}Lazylibrarian/books:/books
+      - ${ARRPATH}qbittorrent/downloads:/import
     restart: unless-stopped
     env_file:
       - '.env'
