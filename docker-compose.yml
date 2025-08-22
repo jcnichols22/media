@@ -268,7 +268,7 @@ services:
       - ${ARRPATH}Lazylibrarian/books:/books
       - ${ARRPATH}qbittorrent/downloads:/import
     environment:
-      - CLI_ARGS=--enable-local-write --listen-on=127.0.0.1
+      - CLI_ARGS=--enable-local-write --listen-on=0.0.0.0
     restart: unless-stopped
     env_file:
       - '.env'
