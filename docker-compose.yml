@@ -88,21 +88,22 @@ services:
       - '.env'
 
 # AUDIOBOOKSHELF
-audiobookshelf:
-  image: ghcr.io/advplyr/audiobookshelf:latest
-  container_name: audiobookshelf
-  hostname: audiobookshelf
-  ports:
-    - 13378:80
-  volumes:
-    - /opt/audiobookshelf_config:/config
-    - ${ARRPATH}Lazylibrarian/audiobooks:/audiobooks        # your audiobook media
-    - ${ARRPATH}audiobookshelf_metadata:/metadata            # metadata cache folder
-  environment:
-    - TZ=Etc/UTC                        # change if needed
-  restart: unless-stopped
-  env_file:
-    - '.env'
+  audiobookshelf:
+    image: ghcr.io/advplyr/audiobookshelf:latest
+    container_name: audiobookshelf
+    hostname: audiobookshelf
+    ports:
+      - 13378:80
+    volumes:
+      - /opt/audiobookshelf_config:/config
+      - ${ARRPATH}Lazylibrarian/audiobooks:/audiobooks        # your audiobook media
+      - ${ARRPATH}Lazylibrarian/podcasts:/podcasts            # optional podcasts folder
+      - ${ARRPATH}audiobookshelf_metadata:/metadata           # metadata cache folder
+    environment:
+      - TZ=Etc/UTC                        # change if needed
+    restart: unless-stopped
+    env_file:
+      - '.env'
 
 
 
