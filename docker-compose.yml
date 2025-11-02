@@ -88,7 +88,7 @@ services:
 
   # READARR
   readarr:
-    image: hotio/readarr:latest
+    image: lscr.io/linuxserver/readarr:develop
     container_name: readarr
     hostname: readarr
     volumes:
