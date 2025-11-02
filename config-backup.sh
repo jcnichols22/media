@@ -13,6 +13,7 @@ declare -A services=(
   [prowlarr]="/opt/prowlarr_config:/media/josh/Media/Prowlarr/config"
   [bazarr]="/opt/bazarr_config:/media/josh/Media/Bazarr/config"
   [lazylibrarian]="/opt/lazylibrarian_config:/media/josh/Media/Lazylibrarian/config"
+  [readarr]="/opt/readarr_config:/media/josh/Media/Readarr/config"
   [qbittorrent]="/opt/qbittorrent_config:/media/josh/Media/qbittorrent/config"
   [tdarr-server]="/opt/tdarr/server:/media/josh/Media/Tdarr/server"
   [tdarr-configs]="/opt/tdarr/configs:/media/josh/Media/Tdarr/configs"

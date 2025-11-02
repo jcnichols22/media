@@ -1,7 +1,7 @@
-services:       
+services:
 
-# PROWLARR
-                              
+  # PROWLARR
+
   prowlarr:
     image: linuxserver/prowlarr:latest
     container_name: prowlarr
@@ -17,7 +17,7 @@ services:
     env_file:
       - '.env'
 
-# Bazarr
+  # Bazarr
 
   bazarr:
     image: linuxserver/bazarr:latest
@@ -25,17 +25,16 @@ services:
     hostname: bazarr
     volumes:
       - /opt/bazarr_config:/config
-      - ${ARRPATH}Sonarr/tvseries:/data/tvshows        
-      - ${ARRPATH}Radarr/movies:/data/movies           
+      - ${ARRPATH}Sonarr/tvseries:/data/tvshows
+      - ${ARRPATH}Radarr/movies:/data/movies
     ports:
       - 6767:6767
     restart: unless-stopped
     env_file:
       - '.env'
 
-      
-# SONARR                                               
-      
+  # SONARR                                               
+
   sonarr:
     image: linuxserver/sonarr:latest
     container_name: sonarr
@@ -50,8 +49,8 @@ services:
     restart: unless-stopped
     env_file:
       - '.env'
-      
-# RADARR                                             
+
+  # RADARR                                             
 
   radarr:
     image: linuxserver/radarr:latest
@@ -68,8 +67,8 @@ services:
     restart: unless-stopped
     env_file:
       - '.env'
-      
-# LAZYLIBRARIAN
+
+  # LAZYLIBRARIAN
   lazylibrarian:
     image: lscr.io/linuxserver/lazylibrarian:latest
     container_name: lazylibrarian
@@ -87,35 +86,31 @@ services:
     env_file:
       - '.env'
 
-# AUDIOBOOKSHELF
-  audiobookshelf:
-    image: ghcr.io/advplyr/audiobookshelf:latest
-    container_name: audiobookshelf
-    hostname: audiobookshelf
-    ports:
-      - 13378:80
+  # READARR
+  readarr:
+    image: linuxserver/readarr:latest
+    container_name: readarr
+    hostname: readarr
     volumes:
-      - /opt/audiobookshelf_config:/config
-      - ${ARRPATH}Lazylibrarian/audiobooks:/audiobooks        # your audiobook media
-      - ${ARRPATH}Lazylibrarian/podcasts:/podcasts            # optional podcasts folder
-      - ${ARRPATH}audiobookshelf_metadata:/metadata           # metadata cache folder
-    environment:
-      - TZ=Etc/UTC                        # change if needed
+      - /opt/readarr_config:/config
+      - ${ARRPATH}Lazylibrarian/books:/books
+      - ${ARRPATH}Readarr/backup:/Backup
+      - ${ARRPATH}qbittorrent/downloads:/downloads
+    ports:
+      - 8787:8787
     restart: unless-stopped
     env_file:
       - '.env'
 
+  # JELLYFIN
 
-
-# JELLYFIN
-     
   jellyfin:
     image: linuxserver/jellyfin
     container_name: jellyfin
     ports:
-      - '8096:8096/tcp'   # Jellyfin web interface
-      - '7359:7359/udp'   # Network discovery
-      - '1900:1900/udp'   # DLNA port
+      - '8096:8096/tcp' # Jellyfin web interface
+      - '7359:7359/udp' # Network discovery
+      - '1900:1900/udp' # DLNA port
     volumes:
       - /opt/jellyfin_config:/config
       - ${ARRPATH}Radarr/movies:/data/Movies
@@ -128,7 +123,7 @@ services:
       - '.env'
     restart: unless-stopped
 
-# JELLYSEERR
+  # JELLYSEERR
 
   jellyseerr:
     image: fallenbagel/jellyseerr:latest
@@ -139,17 +134,16 @@ services:
     volumes:
       - /opt/jellyseerr_config:/app/config
       - ${ARRPATH}Jellyfin/config:/app/jellyfin # optional read-only mapping to let Jellyseerr read Jellyfin's config
-      - ${ARRPATH}Radarr/movies:/data/Movies   # Allow importing/requesting files
+      - ${ARRPATH}Radarr/movies:/data/Movies # Allow importing/requesting files
       - ${ARRPATH}Sonarr/tvseries:/data/TVShows
-      - ${ARRPATH}Lidarr/music:/data/Music     # If music requests supported (optional)
-      - ${ARRPATH}Readarr/books:/data/Books    # If books requests (future support/optional)
+      - ${ARRPATH}Lidarr/music:/data/Music # If music requests supported (optional)
+      - ${ARRPATH}Readarr/books:/data/Books # If books requests (future support/optional)
     env_file:
       - '.env'
     restart: unless-stopped
 
-          
-#  qBittorrent                                                                                          
-                                                                                             
+  #  qBittorrent                                                                                          
+
   qbittorrent:
     image: lscr.io/linuxserver/qbittorrent:latest
     container_name: qbittorrent
@@ -170,7 +164,7 @@ services:
   tdarr:
     container_name: tdarr
     hostname: tdarr
-    image: ghcr.io/haveagitgat/tdarr_acc:latest  # Intel QuickSync enabled image
+    image: ghcr.io/haveagitgat/tdarr_acc:latest # Intel QuickSync enabled image
     restart: unless-stopped
     network_mode: bridge
     ports:
@@ -196,15 +190,15 @@ services:
       - ${ARRPATH}:/media
       - /transcode_cache:/temp
     devices:
-      - /dev/dri:/dev/dri  
+      - /dev/dri:/dev/dri
     env_file:
       - '.env'
 
   tdarr-node:
     container_name: tdarr-node
-    image: ghcr.io/haveagitgat/tdarr_node_acc:latest  # Intel QuickSync enabled node
+    image: ghcr.io/haveagitgat/tdarr_node_acc:latest # Intel QuickSync enabled node
     restart: unless-stopped
-    network_mode: service:tdarr  # Shares network with tdarr server
+    network_mode: service:tdarr # Shares network with tdarr server
     environment:
       - UMASK_SET=002
       - nodeName=MyExternalNode
@@ -219,7 +213,7 @@ services:
       - maxLogSizeMB=10
       - pollInterval=2000
       - startPaused=false
-      - transcodegpuWorkers=1  # Will use QuickSync via VA-API
+      - transcodegpuWorkers=1 # Will use QuickSync via VA-API
       - transcodecpuWorkers=2
       - healthcheckgpuWorkers=1
       - healthcheckcpuWorkers=1
@@ -229,11 +223,11 @@ services:
       - ${ARRPATH}:/media
       - /transcode_cache:/temp
     devices:
-      - /dev/dri:/dev/dri  # Intel QuickSync
+      - /dev/dri:/dev/dri # Intel QuickSync
     env_file:
       - '.env'
 
-# AUTOMATIC RIPPING MACHINE (ARM)
+  # AUTOMATIC RIPPING MACHINE (ARM)
   arm-rippers:
     image: 1337server/automatic-ripping-machine:latest
     container_name: arm-rippers
@@ -255,14 +249,14 @@ services:
     env_file:
       - '.env'
 
-# CALIBRE
+  # CALIBRE
   calibre:
     image: lscr.io/linuxserver/calibre:latest
     container_name: calibre
     hostname: calibre
     ports:
-      - 8181:8181  # Web UI
-      - 8081:8081  # Content server
+      - 8181:8181 # Web UI
+      - 8081:8081 # Content server
     volumes:
       - /opt/calibre_config:/config
       - ${ARRPATH}Lazylibrarian/books:/books
@@ -273,7 +267,7 @@ services:
     env_file:
       - '.env'
 
-# CALIBRE-WEB
+  # CALIBRE-WEB
   calibre-web:
     image: lscr.io/linuxserver/calibre-web:latest
     container_name: calibre-web
