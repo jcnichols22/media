@@ -183,14 +183,23 @@ services:
       - openBrowser=true
       - maxLogSizeMB=10
       - cronPluginUpdate=
+        - NVIDIA_VISIBLE_DEVICES=all
+        - NVIDIA_DRIVER_CAPABILITIES=all
     volumes:
       - /opt/tdarr/server:/app/server
       - /opt/tdarr/configs:/app/configs
       - /opt/tdarr/logs:/app/logs
       - ${ARRPATH}:/media
       - /transcode_cache:/temp
-    devices:
-      - /dev/dri:/dev/dri
+      devices:
+        - /dev/dri:/dev/dri # Intel Quick Sync
+      deploy:
+        resources:
+          reservations:
+            devices:
+              - driver: nvidia
+                count: all
+                capabilities: [gpu]
     env_file:
       - '.env'
 
@@ -217,13 +226,22 @@ services:
       - transcodecpuWorkers=2
       - healthcheckgpuWorkers=1
       - healthcheckcpuWorkers=1
+        - NVIDIA_VISIBLE_DEVICES=all
+        - NVIDIA_DRIVER_CAPABILITIES=all
     volumes:
       - /opt/tdarr/configs:/app/configs
       - /opt/tdarr/logs:/app/logs
       - ${ARRPATH}:/media
       - /transcode_cache:/temp
     devices:
-      - /dev/dri:/dev/dri # Intel QuickSync
+      - /dev/dri:/dev/dri # Intel Quick Sync
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
     env_file:
       - '.env'
 
