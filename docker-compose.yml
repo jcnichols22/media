@@ -190,11 +190,11 @@ services:
       - /opt/tdarr/logs:/app/logs
       - ${ARRPATH}:/media
       - /transcode_cache:/temp
-      devices:
-        - /dev/dri:/dev/dri # Intel Quick Sync
-        - /dev/nvidia0:/dev/nvidia0
-        - /dev/nvidiactl:/dev/nvidiactl
-        - /dev/nvidia-uvm:/dev/nvidia-uvm
+    devices:
+      - /dev/dri:/dev/dri # Intel Quick Sync
+      - /dev/nvidia0:/dev/nvidia0
+      - /dev/nvidiactl:/dev/nvidiactl
+      - /dev/nvidia-uvm:/dev/nvidia-uvm
     env_file:
       - '.env'
 
