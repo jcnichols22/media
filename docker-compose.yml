@@ -183,7 +183,7 @@ services:
       - openBrowser=true
       - maxLogSizeMB=10
       - cronPluginUpdate=
-        - NVIDIA_DRIVER_CAPABILITIES=compute,utility,video,graphics
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility,video,graphics
     volumes:
       - /opt/tdarr/server:/app/server
       - /opt/tdarr/configs:/app/configs
