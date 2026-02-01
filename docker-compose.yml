@@ -1,5 +1,4 @@
 services:
-
   # PROWLARR
 
   prowlarr:
@@ -15,7 +14,7 @@ services:
       - 9696:9696
     restart: unless-stopped
     env_file:
-      - '.env'
+      - ".env"
 
   # Bazarr
 
@@ -31,9 +30,9 @@ services:
       - 6767:6767
     restart: unless-stopped
     env_file:
-      - '.env'
+      - ".env"
 
-  # SONARR                                               
+  # SONARR
 
   sonarr:
     image: linuxserver/sonarr:latest
@@ -48,9 +47,9 @@ services:
       - 8989:8989
     restart: unless-stopped
     env_file:
-      - '.env'
+      - ".env"
 
-  # RADARR                                             
+  # RADARR
 
   radarr:
     image: linuxserver/radarr:latest
@@ -66,7 +65,7 @@ services:
       - 7878:7878
     restart: unless-stopped
     env_file:
-      - '.env'
+      - ".env"
 
   # LAZYLIBRARIAN
   lazylibrarian:
@@ -84,7 +83,7 @@ services:
       - DOCKER_MODS=linuxserver/mods:universal-calibre|linuxserver/mods:lazylibrarian-ffmpeg # optional
     restart: unless-stopped
     env_file:
-      - '.env'
+      - ".env"
 
   # READARR
   readarr:
@@ -100,7 +99,7 @@ services:
       - 8787:8787
     restart: unless-stopped
     env_file:
-      - '.env'
+      - ".env"
 
   # JELLYFIN
 
@@ -108,9 +107,9 @@ services:
     image: linuxserver/jellyfin
     container_name: jellyfin
     ports:
-      - '8096:8096/tcp' # Jellyfin web interface
-      - '7359:7359/udp' # Network discovery
-      - '1900:1900/udp' # DLNA port
+      - "8096:8096/tcp" # Jellyfin web interface
+      - "7359:7359/udp" # Network discovery
+      - "1900:1900/udp" # DLNA port
     volumes:
       - /opt/jellyfin_config:/config
       - ${ARRPATH}Radarr/movies:/data/Movies
@@ -120,7 +119,7 @@ services:
     environment:
       - JELLYFIN_PublishedServerUrl=http://192.168.0.102 #optional
     env_file:
-      - '.env'
+      - ".env"
     restart: unless-stopped
 
   # JELLYSEERR
@@ -139,10 +138,10 @@ services:
       - ${ARRPATH}Lidarr/music:/data/Music # If music requests supported (optional)
       - ${ARRPATH}Readarr/books:/data/Books # If books requests (future support/optional)
     env_file:
-      - '.env'
+      - ".env"
     restart: unless-stopped
 
-  #  qBittorrent                                                                                          
+  #  qBittorrent
 
   qbittorrent:
     image: lscr.io/linuxserver/qbittorrent:latest
@@ -159,7 +158,7 @@ services:
       - 6881:6881/udp #qbittorrent
     restart: unless-stopped
     env_file:
-      - '.env'
+      - ".env"
 
   tdarr:
     container_name: tdarr
@@ -183,7 +182,7 @@ services:
       - openBrowser=true
       - maxLogSizeMB=10
       - cronPluginUpdate=
-      - NVIDIA_DRIVER_CAPABILITIES=compute,utility,video,graphics
+      # NVIDIA_DRIVER_CAPABILITIES removed; using only Intel Quick Sync
     volumes:
       - /opt/tdarr/server:/app/server
       - /opt/tdarr/configs:/app/configs
@@ -192,11 +191,9 @@ services:
       - /transcode_cache:/temp
     devices:
       - /dev/dri:/dev/dri # Intel Quick Sync
-      - /dev/nvidia0:/dev/nvidia0
-      - /dev/nvidiactl:/dev/nvidiactl
-      - /dev/nvidia-uvm:/dev/nvidia-uvm
+      # NVIDIA devices removed; using only Intel Quick Sync
     env_file:
-      - '.env'
+      - ".env"
 
   tdarr-node:
     container_name: tdarr-node
@@ -221,7 +218,6 @@ services:
       - transcodecpuWorkers=2
       - healthcheckgpuWorkers=1
       - healthcheckcpuWorkers=1
-      - NVIDIA_DRIVER_CAPABILITIES=compute,utility,video,graphics
     volumes:
       - /opt/tdarr/configs:/app/configs
       - /opt/tdarr/logs:/app/logs
@@ -229,11 +225,8 @@ services:
       - /transcode_cache:/temp
     devices:
       - /dev/dri:/dev/dri # Intel Quick Sync
-      - /dev/nvidia0:/dev/nvidia0
-      - /dev/nvidiactl:/dev/nvidiactl
-      - /dev/nvidia-uvm:/dev/nvidia-uvm
     env_file:
-      - '.env'
+      - ".env"
 
   # AUTOMATIC RIPPING MACHINE (ARM)
   arm-rippers:
@@ -255,7 +248,7 @@ services:
     privileged: true
     restart: always
     env_file:
-      - '.env'
+      - ".env"
 
   # CALIBRE
   calibre:
@@ -273,7 +266,7 @@ services:
       - CLI_ARGS=--enable-local-write --listen-on=0.0.0.0
     restart: unless-stopped
     env_file:
-      - '.env'
+      - ".env"
 
   # CALIBRE-WEB
   calibre-web:
@@ -287,4 +280,4 @@ services:
       - ${ARRPATH}Lazylibrarian/books:/books
     restart: unless-stopped
     env_file:
-      - '.env'
+      - ".env"
