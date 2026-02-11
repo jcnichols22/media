@@ -67,40 +67,6 @@ services:
     env_file:
       - ".env"
 
-  # LAZYLIBRARIAN
-  lazylibrarian:
-    image: lscr.io/linuxserver/lazylibrarian:latest
-    container_name: lazylibrarian
-    hostname: lazylibrarian
-    ports:
-      - 5299:5299
-    volumes:
-      - /opt/lazylibrarian_config:/config
-      - ${ARRPATH}Lazylibrarian/books:/books
-      - ${ARRPATH}Lazylibrarian/audiobooks:/audiobooks
-      - ${ARRPATH}qbittorrent/downloads:/downloads
-    environment:
-      - DOCKER_MODS=linuxserver/mods:universal-calibre|linuxserver/mods:lazylibrarian-ffmpeg # optional
-    restart: unless-stopped
-    env_file:
-      - ".env"
-
-  # READARR
-  readarr:
-    image: lscr.io/linuxserver/readarr:develop
-    container_name: readarr
-    hostname: readarr
-    volumes:
-      - /opt/readarr_config:/config
-      - ${ARRPATH}Lazylibrarian/books:/books
-      - ${ARRPATH}Readarr/backup:/Backup
-      - ${ARRPATH}qbittorrent/downloads:/downloads
-    ports:
-      - 8787:8787
-    restart: unless-stopped
-    env_file:
-      - ".env"
-
   # JELLYFIN
 
   jellyfin:
@@ -247,37 +213,5 @@ services:
       - /dev/sr3:/dev/sr3
     privileged: true
     restart: always
-    env_file:
-      - ".env"
-
-  # CALIBRE
-  calibre:
-    image: lscr.io/linuxserver/calibre:latest
-    container_name: calibre
-    hostname: calibre
-    ports:
-      - 8181:8181 # Web UI
-      - 8081:8081 # Content server
-    volumes:
-      - /opt/calibre_config:/config
-      - ${ARRPATH}Lazylibrarian/books:/books
-      - ${ARRPATH}qbittorrent/downloads:/import
-    environment:
-      - CLI_ARGS=--enable-local-write --listen-on=0.0.0.0
-    restart: unless-stopped
-    env_file:
-      - ".env"
-
-  # CALIBRE-WEB
-  calibre-web:
-    image: lscr.io/linuxserver/calibre-web:latest
-    container_name: calibre-web
-    hostname: calibre-web
-    ports:
-      - 8083:8083
-    volumes:
-      - /opt/calibre-web_config:/config
-      - ${ARRPATH}Lazylibrarian/books:/books
-    restart: unless-stopped
     env_file:
       - ".env"
