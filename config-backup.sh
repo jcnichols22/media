@@ -6,21 +6,18 @@
 
 # Array of services where "local_path:remote_path"
 declare -A services=(
-  [jellyfin]="/opt/jellyfin_config:/media/josh/Media/Jellyfin/config"
-  [jellyseerr]="/opt/jellyseerr_config:/media/josh/Media/Jellyseerr/config"
-  [sonarr]="/opt/sonarr_config:/media/josh/Media/Sonarr/config"
-  [radarr]="/opt/radarr_config:/media/josh/Media/Radarr/config"
   [prowlarr]="/opt/prowlarr_config:/media/josh/Media/Prowlarr/config"
   [bazarr]="/opt/bazarr_config:/media/josh/Media/Bazarr/config"
-  [lazylibrarian]="/opt/lazylibrarian_config:/media/josh/Media/Lazylibrarian/config"
-  [readarr]="/opt/readarr_config:/media/josh/Media/Readarr/config"
+  [sonarr]="/opt/sonarr_config:/media/josh/Media/Sonarr/config"
+  [radarr]="/opt/radarr_config:/media/josh/Media/Radarr/config"
+  [jellyfin]="/opt/jellyfin_config:/media/josh/Media/Jellyfin/config"
+  [plex]="/opt/plex_config:/media/josh/Media/Plex/config"
+  [jellyseerr]="/opt/jellyseerr_config:/media/josh/Media/Jellyseerr/config"
   [qbittorrent]="/opt/qbittorrent_config:/media/josh/Media/qbittorrent/config"
   [tdarr-server]="/opt/tdarr/server:/media/josh/Media/Tdarr/server"
   [tdarr-configs]="/opt/tdarr/configs:/media/josh/Media/Tdarr/configs"
   [tdarr-logs]="/opt/tdarr/logs:/media/josh/Media/Tdarr/logs"
-  [arm]="/media/josh/Media/ARM/config:/media/josh/Media/ARM/config"   # already mapped there, but mirror if needed
-  [calibre]="/opt/calibre_config:/media/josh/Media/Calibre/config"
-  [calibre-web]="/opt/calibre-web_config:/media/josh/Media/Calibre-Web/config"
+  [arm]="${ARRPATH}ARM/config:/media/josh/Media/ARM/config"
 )
 
 # Run rsync for each service
