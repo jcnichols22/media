@@ -88,6 +88,27 @@ services:
       - ".env"
     restart: unless-stopped
 
+    # PLEX
+
+    plex:
+      image: plexinc/pms-docker:latest
+      container_name: plex
+      network_mode: host
+      environment:
+        - PUID=1000
+        - PGID=1000
+        - TZ=America/New_York
+        - PLEX_CLAIM= # Optional: add your Plex claim token here
+      volumes:
+        - /opt/plex_config:/config
+        - ${ARRPATH}Radarr/movies:/data/Movies
+        - ${ARRPATH}Sonarr/tvseries:/data/TVShows
+        - ${ARRPATH}Lidarr/music:/data/Music
+        - ${ARRPATH}Readarr/books:/data/Books
+      restart: unless-stopped
+      env_file:
+        - ".env"
+
   # JELLYSEERR
 
   jellyseerr:
