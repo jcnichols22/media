@@ -1,4 +1,37 @@
 services:
+  # GLUETUN (ProtonVPN)
+
+  gluetun:
+    image: qmcgaw/gluetun:latest
+    container_name: gluetun
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    environment:
+      - VPN_SERVICE_PROVIDER=protonvpn
+      - VPN_TYPE=wireguard
+      - WIREGUARD_PRIVATE_KEY=${PROTONVPN_WG_PRIVATE_KEY}
+      - WIREGUARD_ADDRESSES=${PROTONVPN_WG_ADDRESSES}
+      - WIREGUARD_ENDPOINT_IP=${PROTONVPN_WG_ENDPOINT_IP}
+      - WIREGUARD_ENDPOINT_PORT=${PROTONVPN_WG_ENDPOINT_PORT}
+      - WIREGUARD_PUBLIC_KEY=${PROTONVPN_WG_PUBLIC_KEY}
+      - WIREGUARD_ALLOWED_IPS=${PROTONVPN_WG_ALLOWED_IPS}
+      - WIREGUARD_DNS=${PROTONVPN_WG_DNS}
+      - TZ=${TZ}
+    ports:
+      - 8080:8080 # qBittorrent WebUI
+      - 6881:6881 # qBittorrent TCP
+      - 6881:6881/udp # qBittorrent UDP
+    healthcheck:
+      test: [ "CMD", "/gluetun-entrypoint", "healthcheck" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    restart: unless-stopped
+    env_file:
+      - ".env"
   # PROWLARR
 
   prowlarr:
@@ -12,6 +45,19 @@ services:
 
     ports:
       - 9696:9696
+    restart: unless-stopped
+    env_file:
+      - ".env"
+
+  # JELLYPLEX-WATCHED (Sync Jellyfin <-> Plex watch history)
+
+  jellyplex-watched:
+    image: ghcr.io/luigi311/jellyplex-watched:latest
+    container_name: jellyplex-watched
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/New_York
     restart: unless-stopped
     env_file:
       - ".env"
@@ -88,26 +134,26 @@ services:
       - ".env"
     restart: unless-stopped
 
-    # PLEX
+  # PLEX
 
-    plex:
-      image: plexinc/pms-docker:latest
-      container_name: plex
-      network_mode: host
-      environment:
-        - PUID=1000
-        - PGID=1000
-        - TZ=America/New_York
-        - PLEX_CLAIM= # Optional: add your Plex claim token here
-      volumes:
-        - /opt/plex_config:/config
-        - ${ARRPATH}Radarr/movies:/data/Movies
-        - ${ARRPATH}Sonarr/tvseries:/data/TVShows
-        - ${ARRPATH}Lidarr/music:/data/Music
-        - ${ARRPATH}Readarr/books:/data/Books
-      restart: unless-stopped
-      env_file:
-        - ".env"
+  plex:
+    image: plexinc/pms-docker:latest
+    container_name: plex
+    network_mode: host
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/New_York
+      - PLEX_CLAIM= # Optional: add your Plex claim token here
+    volumes:
+      - /opt/plex_config:/config
+      - ${ARRPATH}Radarr/movies:/data/Movies
+      - ${ARRPATH}Sonarr/tvseries:/data/TVShows
+      - ${ARRPATH}Lidarr/music:/data/Music
+      - ${ARRPATH}Readarr/books:/data/Books
+    restart: unless-stopped
+    env_file:
+      - ".env"
 
   # JELLYSEERR
 
@@ -133,16 +179,16 @@ services:
   qbittorrent:
     image: lscr.io/linuxserver/qbittorrent:latest
     container_name: qbittorrent
+    network_mode: service:gluetun
+    depends_on:
+      gluetun:
+        condition: service_healthy
     environment:
       - WEBUI_PORT=8080
       - TORRENTING_PORT=6881
     volumes:
       - /opt/qbittorrent_config:/config
       - ${ARRPATH}qbittorrent/downloads:/downloads
-    ports:
-      - 8080:8080 #qbittorrent
-      - 6881:6881 #qbittorrent
-      - 6881:6881/udp #qbittorrent
     restart: unless-stopped
     env_file:
       - ".env"
