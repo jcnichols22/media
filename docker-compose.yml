@@ -128,7 +128,7 @@ services:
       - ${ARRPATH}Lidarr/music:/data/Music
       - ${ARRPATH}Readarr/books:/data/Books
     environment:
-      - JELLYFIN_PublishedServerUrl=http://192.168.0.102 #optional
+      - JELLYFIN_PublishedServerUrl=http://192.168.0.34 #optional
     env_file:
       - ".env"
     restart: unless-stopped
@@ -154,21 +154,27 @@ services:
     env_file:
       - ".env"
 
-  # JELLYSEERR
+  # SEERR (formerly Jellyseerr/Overseerr)
 
-  jellyseerr:
-    image: fallenbagel/jellyseerr:latest
-    container_name: jellyseerr
-    hostname: jellyseerr
+  seerr:
+    image: ghcr.io/seerr-team/seerr:latest
+    container_name: seerr
+    hostname: seerr
     ports:
       - "5055:5055"
     volumes:
-      - /opt/jellyseerr_config:/app/config
-      - ${ARRPATH}Jellyfin/config:/app/jellyfin # optional read-only mapping to let Jellyseerr read Jellyfin's config
+      - /opt/seerr_config:/app/config
+      - ${ARRPATH}Jellyfin/config:/app/jellyfin # optional read-only mapping to let Seerr read Jellyfin's config
       - ${ARRPATH}Radarr/movies:/data/Movies # Allow importing/requesting files
       - ${ARRPATH}Sonarr/tvseries:/data/TVShows
       - ${ARRPATH}Lidarr/music:/data/Music # If music requests supported (optional)
       - ${ARRPATH}Readarr/books:/data/Books # If books requests (future support/optional)
+    healthcheck:
+      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:5055/api/v1/status" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
     env_file:
       - ".env"
     restart: unless-stopped
