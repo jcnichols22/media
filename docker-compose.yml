@@ -17,6 +17,7 @@ services:
       - WIREGUARD_PUBLIC_KEY=${PROTONVPN_WG_PUBLIC_KEY}
       - WIREGUARD_ALLOWED_IPS=${PROTONVPN_WG_ALLOWED_IPS}
       - WIREGUARD_DNS=${PROTONVPN_WG_DNS}
+      - FIREWALL_INPUT_PORTS=8080,6881
       - TZ=${TZ}
     ports:
       - 8080:8080 # qBittorrent WebUI
@@ -38,7 +39,7 @@ services:
     container_name: prowlarr
     hostname: prowlarr
     volumes:
-      - /opt/prowlarr_config:/config
+      - /opt/appdata/prowlarr:/config
       - ${ARRPATH}Prowlarr/backup:/data/Backup
       - ${ARRPATH}qbittorrent/downloads:/downloads
 
@@ -68,7 +69,7 @@ services:
     container_name: bazarr
     hostname: bazarr
     volumes:
-      - /opt/bazarr_config:/config
+      - /opt/appdata/bazarr:/config
       - ${ARRPATH}Sonarr/tvseries:/data/tvshows
       - ${ARRPATH}Radarr/movies:/data/movies
     ports:
@@ -84,7 +85,7 @@ services:
     container_name: sonarr
     hostname: sonarr
     volumes:
-      - /opt/sonarr_config:/config
+      - /opt/appdata/sonarr:/config
       - ${ARRPATH}Sonarr/backup:/data/Backup
       - ${ARRPATH}Sonarr/tvseries:/data/tvshows
       - ${ARRPATH}qbittorrent/downloads:/downloads
@@ -101,7 +102,7 @@ services:
     container_name: radarr
     hostname: radarr
     volumes:
-      - /opt/radarr_config:/config
+      - /opt/appdata/radarr:/config
       - ${ARRPATH}Radarr/movies:/data/movies
       - ${ARRPATH}Radarr/backup:/data/Backup
       - ${ARRPATH}qbittorrent/downloads:/downloads
@@ -122,7 +123,7 @@ services:
       - "7359:7359/udp" # Network discovery
       - "1900:1900/udp" # DLNA port
     volumes:
-      - /opt/jellyfin_config:/config
+      - /opt/appdata/jellyfin:/config
       - ${ARRPATH}Radarr/movies:/data/Movies
       - ${ARRPATH}Sonarr/tvseries:/data/TVShows
       - ${ARRPATH}Lidarr/music:/data/Music
@@ -145,7 +146,7 @@ services:
       - TZ=America/New_York
       - PLEX_CLAIM= # Optional: add your Plex claim token here
     volumes:
-      - /opt/plex_config:/config
+      - /opt/appdata/plex:/config
       - ${ARRPATH}Radarr/movies:/data/Movies
       - ${ARRPATH}Sonarr/tvseries:/data/TVShows
       - ${ARRPATH}Lidarr/music:/data/Music
@@ -163,7 +164,7 @@ services:
     ports:
       - "5055:5055"
     volumes:
-      - /opt/seerr_config:/app/config
+      - /opt/appdata/seerr:/app/config
       - ${ARRPATH}Jellyfin/config:/app/jellyfin # optional read-only mapping to let Seerr read Jellyfin's config
       - ${ARRPATH}Radarr/movies:/data/Movies # Allow importing/requesting files
       - ${ARRPATH}Sonarr/tvseries:/data/TVShows
@@ -192,7 +193,7 @@ services:
       - WEBUI_PORT=8080
       - TORRENTING_PORT=6881
     volumes:
-      - /opt/qbittorrent_config:/config
+      - /opt/appdata/qbittorrent:/config
       - ${ARRPATH}qbittorrent/downloads:/downloads
     restart: unless-stopped
     env_file:
@@ -222,9 +223,9 @@ services:
       - cronPluginUpdate=
       # NVIDIA_DRIVER_CAPABILITIES removed; using only Intel Quick Sync
     volumes:
-      - /opt/tdarr/server:/app/server
-      - /opt/tdarr/configs:/app/configs
-      - /opt/tdarr/logs:/app/logs
+      - /opt/appdata/tdarr/server:/app/server
+      - /opt/appdata/tdarr/configs:/app/configs
+      - /opt/appdata/tdarr/logs:/app/logs
       - ${ARRPATH}:/media
       - /transcode_cache:/temp
     devices:
@@ -257,8 +258,8 @@ services:
       - healthcheckgpuWorkers=1
       - healthcheckcpuWorkers=1
     volumes:
-      - /opt/tdarr/configs:/app/configs
-      - /opt/tdarr/logs:/app/logs
+      - /opt/appdata/tdarr/configs:/app/configs
+      - /opt/appdata/tdarr/logs:/app/logs
       - ${ARRPATH}:/media
       - /transcode_cache:/temp
     devices:
@@ -277,7 +278,7 @@ services:
       - ${ARRPATH}ARM/Music:/home/arm/Music
       - ${ARRPATH}ARM/logs:/home/arm/logs
       - ${ARRPATH}ARM/media:/home/arm/media
-      - ${ARRPATH}ARM/config:/etc/arm/config
+      - /opt/appdata/arm:/etc/arm/config
     devices:
       - /dev/sr0:/dev/sr0
       - /dev/sr1:/dev/sr1

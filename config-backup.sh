@@ -1,23 +1,23 @@
 #!/bin/bash
 
 # ==============================================================================
-# Backup service configs from /opt to /media/josh/Media/<Service>/config
+# Backup service configs from /opt/appdata to /mnt/unraid_backsups/<Service>/config
 # ==============================================================================
 
 # Array of services where "local_path:remote_path"
 declare -A services=(
-  [prowlarr]="/opt/prowlarr_config:/media/josh/Media/Prowlarr/config"
-  [bazarr]="/opt/bazarr_config:/media/josh/Media/Bazarr/config"
-  [sonarr]="/opt/sonarr_config:/media/josh/Media/Sonarr/config"
-  [radarr]="/opt/radarr_config:/media/josh/Media/Radarr/config"
-  [jellyfin]="/opt/jellyfin_config:/media/josh/Media/Jellyfin/config"
-  [plex]="/opt/plex_config:/media/josh/Media/Plex/config"
-  [seerr]="/opt/seerr_config:/media/josh/Media/Seerr/config"
-  [qbittorrent]="/opt/qbittorrent_config:/media/josh/Media/qbittorrent/config"
-  [tdarr-server]="/opt/tdarr/server:/media/josh/Media/Tdarr/server"
-  [tdarr-configs]="/opt/tdarr/configs:/media/josh/Media/Tdarr/configs"
-  [tdarr-logs]="/opt/tdarr/logs:/media/josh/Media/Tdarr/logs"
-  [arm]="${ARRPATH}ARM/config:/media/josh/Media/ARM/config"
+  [prowlarr]="/opt/appdata/prowlarr:/mnt/unraid_backsups/Prowlarr/config"
+  [bazarr]="/opt/appdata/bazarr:/mnt/unraid_backsups/Bazarr/config"
+  [sonarr]="/opt/appdata/sonarr:/mnt/unraid_backsups/Sonarr/config"
+  [radarr]="/opt/appdata/radarr:/mnt/unraid_backsups/Radarr/config"
+  [jellyfin]="/opt/appdata/jellyfin:/mnt/unraid_backsups/Jellyfin/config"
+  [plex]="/opt/appdata/plex:/mnt/unraid_backsups/Plex/config"
+  [seerr]="/opt/appdata/seerr:/mnt/unraid_backsups/Seerr/config"
+  [qbittorrent]="/opt/appdata/qbittorrent:/mnt/unraid_backsups/qbittorrent/config"
+  [tdarr-server]="/opt/appdata/tdarr/server:/mnt/unraid_backsups/Tdarr/server"
+  [tdarr-configs]="/opt/appdata/tdarr/configs:/mnt/unraid_backsups/Tdarr/configs"
+  [tdarr-logs]="/opt/appdata/tdarr/logs:/mnt/unraid_backsups/Tdarr/logs"
+  [arm]="/opt/appdata/arm:/mnt/unraid_backsups/ARM/config"
 )
 
 # Run rsync for each service
