@@ -234,39 +234,6 @@ services:
     env_file:
       - ".env"
 
-  tdarr-node:
-    container_name: tdarr-node
-    image: ghcr.io/haveagitgat/tdarr_node_acc:latest # Intel QuickSync enabled node
-    restart: unless-stopped
-    network_mode: service:tdarr # Shares network with tdarr server
-    environment:
-      - UMASK_SET=002
-      - nodeName=MyExternalNode
-      - serverIP=0.0.0.0
-      - serverPort=8266
-      - inContainer=true
-      - ffmpegVersion=7
-      - nodeType=mapped
-      - priority=-1
-      - cronPluginUpdate=
-      - apiKey=
-      - maxLogSizeMB=10
-      - pollInterval=2000
-      - startPaused=false
-      - transcodegpuWorkers=1 # Will use QuickSync via VA-API
-      - transcodecpuWorkers=2
-      - healthcheckgpuWorkers=1
-      - healthcheckcpuWorkers=1
-    volumes:
-      - /opt/appdata/tdarr/configs:/app/configs
-      - /opt/appdata/tdarr/logs:/app/logs
-      - ${ARRPATH}:/media
-      - /transcode_cache:/temp
-    devices:
-      - /dev/dri:/dev/dri # Intel Quick Sync
-    env_file:
-      - ".env"
-
   # AUTOMATIC RIPPING MACHINE (ARM)
   arm-rippers:
     image: 1337server/automatic-ripping-machine:latest

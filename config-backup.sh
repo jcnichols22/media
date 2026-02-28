@@ -1,31 +1,69 @@
 #!/bin/bash
 
 # ==============================================================================
-# Backup service configs from /opt/appdata to /mnt/unraid_backsups/<Service>/config
+# Backup service configs from /opt/appdata to /mnt/unraid_backups/media-server/configs/<Service>
 # ==============================================================================
 
-# Array of services where "local_path:remote_path"
-declare -A services=(
-  [prowlarr]="/opt/appdata/prowlarr:/mnt/unraid_backsups/Prowlarr/config"
-  [bazarr]="/opt/appdata/bazarr:/mnt/unraid_backsups/Bazarr/config"
-  [sonarr]="/opt/appdata/sonarr:/mnt/unraid_backsups/Sonarr/config"
-  [radarr]="/opt/appdata/radarr:/mnt/unraid_backsups/Radarr/config"
-  [jellyfin]="/opt/appdata/jellyfin:/mnt/unraid_backsups/Jellyfin/config"
-  [plex]="/opt/appdata/plex:/mnt/unraid_backsups/Plex/config"
-  [seerr]="/opt/appdata/seerr:/mnt/unraid_backsups/Seerr/config"
-  [qbittorrent]="/opt/appdata/qbittorrent:/mnt/unraid_backsups/qbittorrent/config"
-  [tdarr-server]="/opt/appdata/tdarr/server:/mnt/unraid_backsups/Tdarr/server"
-  [tdarr-configs]="/opt/appdata/tdarr/configs:/mnt/unraid_backsups/Tdarr/configs"
-  [tdarr-logs]="/opt/appdata/tdarr/logs:/mnt/unraid_backsups/Tdarr/logs"
-  [arm]="/opt/appdata/arm:/mnt/unraid_backsups/ARM/config"
+BACKUP_BASE="/mnt/unraid_backups/media-server/configs"
+NTFY_URL="http://192.168.0.119/media-server-backup-cron"
+FAILED=()
+
+# Base rsync options (applies to all services)
+RSYNC_BASE_OPTS="-av --delete --no-specials --no-devices --exclude=*.sock --exclude=*.pid --exclude=ipc-socket"
+
+# Each entry: "src:dst[:exclude1:exclude2:...]"
+services=(
+  "prowlarr:/opt/appdata/prowlarr:${BACKUP_BASE}/prowlarr"
+  "bazarr:/opt/appdata/bazarr:${BACKUP_BASE}/bazarr"
+  "sonarr:/opt/appdata/sonarr:${BACKUP_BASE}/sonarr"
+  "radarr:/opt/appdata/radarr:${BACKUP_BASE}/radarr"
+  "jellyfin:/opt/appdata/jellyfin:${BACKUP_BASE}/jellyfin:cache:transcodes"
+  "plex:/opt/appdata/plex:${BACKUP_BASE}/plex:Library/Application Support/Plex Media Server/Cache:Library/Application Support/Plex Media Server/Codecs:Library/Application Support/Plex Media Server/Crash Reports"
+  "seerr:/opt/appdata/seerr:${BACKUP_BASE}/seerr"
+  "qbittorrent:/opt/appdata/qbittorrent:${BACKUP_BASE}/qbittorrent"
+  "tdarr-server:/opt/appdata/tdarr/server:${BACKUP_BASE}/tdarr/server"
+  "tdarr-configs:/opt/appdata/tdarr/configs:${BACKUP_BASE}/tdarr/configs"
+  "tdarr-logs:/opt/appdata/tdarr/logs:${BACKUP_BASE}/tdarr/logs"
+  "arm:/opt/appdata/arm:${BACKUP_BASE}/arm"
 )
 
-# Run rsync for each service
-for service in "${!services[@]}"; do
-  IFS=":" read -r src dst <<< "${services[$service]}"
-  echo "Backing up $service config..."
-  rsync -av --delete "$src/" "$dst/"
+for entry in "${services[@]}"; do
+  IFS=":" read -r service src dst excludes_str <<< "$entry"
+  echo "Backing up $service..."
+  mkdir -p "$dst"
+
+  # Build exclude args from colon-separated excludes
+  exclude_args=()
+  IFS=":" read -ra excludes <<< "$excludes_str"
+  for ex in "${excludes[@]}"; do
+    [[ -n "$ex" ]] && exclude_args+=(--exclude="$ex")
+  done
+
+  # seerr: CIFS doesn't support symlinks, copy them as files instead
+  # tdarr: filenames with () break rsync temp files on CIFS, use --inplace
+  extra_opts=()
+  [[ "$service" == "seerr" ]] && extra_opts+=(--copy-links)
+  [[ "$service" == tdarr* ]] && extra_opts+=(--inplace)
+
+  if ! rsync $RSYNC_BASE_OPTS "${extra_opts[@]}" "${exclude_args[@]}" "$src/" "$dst/"; then
+    FAILED+=("$service")
+  fi
 done
 
-# Optional: Log time
-echo "Backup completed at $(date)" >> /var/log/opt-config-backup.log
+TIMESTAMP=$(date)
+
+if [ ${#FAILED[@]} -eq 0 ]; then
+  curl -s \
+    -H "Title: ✅ Media Server Backup Complete" \
+    -H "Priority: low" \
+    -d "All configs backed up successfully at ${TIMESTAMP}." \
+    "$NTFY_URL"
+else
+  curl -s \
+    -H "Title: ❌ Media Server Backup Failed" \
+    -H "Priority: high" \
+    -d "Backup completed at ${TIMESTAMP} with failures: ${FAILED[*]}" \
+    "$NTFY_URL"
+fi
+
+echo "Backup completed at ${TIMESTAMP}" >> /var/log/opt-config-backup.log
