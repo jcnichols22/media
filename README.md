@@ -30,11 +30,31 @@ This repository runs a home media stack with Docker Compose, including VPN-route
 
 - Media root (`ARRPATH`) is set in `.env` to `/mnt/unraid_media/`.
 - App configs are stored on native storage under `/opt/appdata/<service>`.
+- Anime is separated from standard libraries with dedicated paths:
+    - `/mnt/unraid_media/Radarr/anime-movies`
+    - `/mnt/unraid_media/Sonarr/anime-tvshows`
 - Tdarr uses:
     - `/opt/appdata/tdarr/server`
     - `/opt/appdata/tdarr/configs`
     - `/opt/appdata/tdarr/logs`
     - `/transcode_cache` (temp/transcode workspace)
+
+## Anime Separation Setup
+
+After pulling the updated compose file, add separate root folders in each app:
+
+1. Sonarr: add root folder `/data/anime-tvshows` (in addition to `/data/tvshows`).
+2. Radarr: add root folder `/data/anime-movies` (in addition to `/data/movies`).
+3. Bazarr: map anime series/movies from `/data/anime-tvshows` and `/data/anime-movies`.
+4. Jellyfin/Plex: create separate libraries that point to:
+     - `/data/AnimeTVShows`
+     - `/data/AnimeMovies`
+
+Then deploy changes:
+
+```bash
+docker compose up -d --remove-orphans
+```
 
 ## Prerequisites
 

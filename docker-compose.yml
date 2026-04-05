@@ -18,6 +18,7 @@ services:
       - WIREGUARD_ALLOWED_IPS=${PROTONVPN_WG_ALLOWED_IPS}
       - WIREGUARD_DNS=${PROTONVPN_WG_DNS}
       - FIREWALL_INPUT_PORTS=8080,6881
+      - DOT=off
       - TZ=${TZ}
     ports:
       - 8080:8080 # qBittorrent WebUI
@@ -71,7 +72,9 @@ services:
     volumes:
       - /opt/appdata/bazarr:/config
       - ${ARRPATH}Sonarr/tvseries:/data/tvshows
+      - ${ARRPATH}Sonarr/anime-tvshows:/data/anime-tvshows
       - ${ARRPATH}Radarr/movies:/data/movies
+      - ${ARRPATH}Radarr/anime-movies:/data/anime-movies
     ports:
       - 6767:6767
     restart: unless-stopped
@@ -88,9 +91,13 @@ services:
       - /opt/appdata/sonarr:/config
       - ${ARRPATH}Sonarr/backup:/data/Backup
       - ${ARRPATH}Sonarr/tvseries:/data/tvshows
+      - ${ARRPATH}Sonarr/anime-tvshows:/data/anime-tvshows
       - ${ARRPATH}qbittorrent/downloads:/downloads
     ports:
       - 8989:8989
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
     restart: unless-stopped
     env_file:
       - ".env"
@@ -104,11 +111,15 @@ services:
     volumes:
       - /opt/appdata/radarr:/config
       - ${ARRPATH}Radarr/movies:/data/movies
+      - ${ARRPATH}Radarr/anime-movies:/data/anime-movies
       - ${ARRPATH}Radarr/backup:/data/Backup
       - ${ARRPATH}qbittorrent/downloads:/downloads
       - ${ARRPATH}ARM/media/completed/movies:/arm-completed
     ports:
       - 7878:7878
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
     restart: unless-stopped
     env_file:
       - ".env"
@@ -125,9 +136,17 @@ services:
     volumes:
       - /opt/appdata/jellyfin:/config
       - ${ARRPATH}Radarr/movies:/data/Movies
+      - ${ARRPATH}Radarr/anime-movies:/data/AnimeMovies
       - ${ARRPATH}Sonarr/tvseries:/data/TVShows
+      - ${ARRPATH}Sonarr/anime-tvshows:/data/AnimeTVShows
       - ${ARRPATH}Lidarr/music:/data/Music
       - ${ARRPATH}Readarr/books:/data/Books
+    devices:
+      - /dev/dri/renderD128:/dev/dri/renderD128
+      - /dev/dri/card1:/dev/dri/card1
+    group_add:
+      - "992" # render group
+      - "44" # video group
     environment:
       - JELLYFIN_PublishedServerUrl=http://192.168.0.34 #optional
     env_file:
@@ -145,10 +164,18 @@ services:
       - PGID=1000
       - TZ=America/New_York
       - PLEX_CLAIM= # Optional: add your Plex claim token here
+    devices:
+      - /dev/dri/renderD128:/dev/dri/renderD128
+      - /dev/dri/card1:/dev/dri/card1
+    group_add:
+      - "992" # render group
+      - "44"  # video group
     volumes:
       - /opt/appdata/plex:/config
       - ${ARRPATH}Radarr/movies:/data/Movies
+      - ${ARRPATH}Radarr/anime-movies:/data/AnimeMovies
       - ${ARRPATH}Sonarr/tvseries:/data/TVShows
+      - ${ARRPATH}Sonarr/anime-tvshows:/data/AnimeTVShows
       - ${ARRPATH}Lidarr/music:/data/Music
       - ${ARRPATH}Readarr/books:/data/Books
     restart: unless-stopped
@@ -167,7 +194,9 @@ services:
       - /opt/appdata/seerr:/app/config
       - ${ARRPATH}Jellyfin/config:/app/jellyfin # optional read-only mapping to let Seerr read Jellyfin's config
       - ${ARRPATH}Radarr/movies:/data/Movies # Allow importing/requesting files
+      - ${ARRPATH}Radarr/anime-movies:/data/AnimeMovies
       - ${ARRPATH}Sonarr/tvseries:/data/TVShows
+      - ${ARRPATH}Sonarr/anime-tvshows:/data/AnimeTVShows
       - ${ARRPATH}Lidarr/music:/data/Music # If music requests supported (optional)
       - ${ARRPATH}Readarr/books:/data/Books # If books requests (future support/optional)
     healthcheck:
@@ -176,6 +205,9 @@ services:
       timeout: 10s
       retries: 3
       start_period: 30s
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
     env_file:
       - ".env"
     restart: unless-stopped
@@ -241,7 +273,7 @@ services:
     ports:
       - "8090:8080"
     volumes:
-      - ${ARRPATH}ARM/home:/home/arm
+      - /opt/appdata/arm-home:/home/arm
       - ${ARRPATH}ARM/Music:/home/arm/Music
       - ${ARRPATH}ARM/logs:/home/arm/logs
       - ${ARRPATH}ARM/media:/home/arm/media
