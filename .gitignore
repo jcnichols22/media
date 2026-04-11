@@ -3,3 +3,5 @@
 !.env.example
 config-backup.log
 pinned-digest-snapshot.txt
+health-monitor.log
+state
