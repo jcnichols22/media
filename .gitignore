@@ -5,3 +5,7 @@ config-backup.log
 pinned-digest-snapshot.txt
 health-monitor.log
 state
+*.bak
+*.bak.*
+docker-compose.yml.bak*
+auto-upgrade.log

@@ -163,3 +163,57 @@ docker compose logs -f profilarr
 
 - Keep app databases/configs on native Linux storage (not mergerfs/FUSE) to avoid SQLite locking/corruption issues.
 - If you remove or rename services, run with `--remove-orphans` to clean old containers.
+
+## Scheduled Upgrades (Every 3 Weeks)
+
+A scheduled upgrade script is available at:
+
+- `/home/josh/media/auto-upgrade-3week.sh`
+
+Default scheduler behavior:
+- Runs from cron on Saturday midnight.
+- Self-gates to execute only every 3 weeks (anchor date in script).
+- Upgrades service-by-service with automatic rollback per service on failure.
+- Sends summary notifications to ntfy topic:
+  - `media-server-upgrades`
+
+Safety behavior:
+- Validates compose before applying changes.
+- Pull/recreate/post-check per service.
+- Restores previous compose and service if pull/recreate/post-check fails.
+- Excludes `gluetun` + `qbittorrent` from unattended upgrades (manual only).
+
+Manual test run:
+
+```bash
+FORCE_RUN=1 /home/josh/media/auto-upgrade-3week.sh
+```
+
+Cron entry example (user `josh`):
+
+```bash
+0 0 * * 6 /home/josh/media/auto-upgrade-3week.sh
+```
+
+## Health Monitoring
+
+Health monitor script:
+
+- `/home/josh/media/health-monitor.sh`
+
+Checks:
+- container running state
+- unhealthy status
+- gluetun health (explicit)
+- disk threshold warnings
+- backup failure/preflight signal
+
+Notifications:
+- ntfy topic `media-server-health`
+- dedupe behavior: sends on change, and sends recovery notifications
+
+Cron entry example (user `josh`):
+
+```bash
+*/15 * * * * /home/josh/media/health-monitor.sh
+```
