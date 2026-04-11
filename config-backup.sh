@@ -6,10 +6,20 @@
 
 BACKUP_BASE="/mnt/unraid_backups/media-server/configs"
 NTFY_URL="http://192.168.0.119/media-server-backup-cron"
+LOG_FILE="/home/josh/media/config-backup.log"
 FAILED=()
+WARNED=()
+
+# Timeout guardrails to avoid one stuck share hanging the whole run
+RSYNC_TIMEOUT_SEC=900         # hard cap per service (15 min)
+RSYNC_IO_TIMEOUT_SEC=120      # rsync stalls on I/O >120s fail fast
 
 # Base rsync options (applies to all services)
-RSYNC_BASE_OPTS="-av --delete --no-specials --no-devices --exclude=*.sock --exclude=*.pid --exclude=ipc-socket"
+RSYNC_BASE_OPTS=(
+  -av --delete --no-specials --no-devices
+  --exclude='*.sock' --exclude='*.pid' --exclude='ipc-socket'
+  --timeout="$RSYNC_IO_TIMEOUT_SEC"
+)
 
 # Each entry: "src:dst[:exclude1:exclude2:...]"
 services=(
@@ -27,6 +37,33 @@ services=(
   "arm:/opt/appdata/arm:${BACKUP_BASE}/arm"
 )
 
+# Preflight: fail fast if backup target is unavailable or not writable
+TIMESTAMP=$(date)
+if [[ ! -d "$BACKUP_BASE" ]]; then
+  msg="Backup preflight failed at ${TIMESTAMP}: destination path missing (${BACKUP_BASE})."
+  echo "$msg"
+  curl -s -H "Title: ❌ Media Server Backup Preflight Failed" -H "Priority: high" -d "$msg" "$NTFY_URL" >/dev/null || true
+  echo "$msg" >> "$LOG_FILE"
+  exit 2
+fi
+
+if ! timeout 20s bash -c "mkdir -p '$BACKUP_BASE' && test -w '$BACKUP_BASE'"; then
+  msg="Backup preflight failed at ${TIMESTAMP}: destination not writable or mount unresponsive (${BACKUP_BASE})."
+  echo "$msg"
+  curl -s -H "Title: ❌ Media Server Backup Preflight Failed" -H "Priority: high" -d "$msg" "$NTFY_URL" >/dev/null || true
+  echo "$msg" >> "$LOG_FILE"
+  exit 3
+fi
+
+preflight_probe="$BACKUP_BASE/.backup-preflight-$$"
+if ! timeout 20s bash -c "echo ok > '$preflight_probe' && rm -f '$preflight_probe'"; then
+  msg="Backup preflight failed at ${TIMESTAMP}: destination probe write failed (${BACKUP_BASE})."
+  echo "$msg"
+  curl -s -H "Title: ❌ Media Server Backup Preflight Failed" -H "Priority: high" -d "$msg" "$NTFY_URL" >/dev/null || true
+  echo "$msg" >> "$LOG_FILE"
+  exit 4
+fi
+
 for entry in "${services[@]}"; do
   IFS=":" read -r service src dst excludes_str <<< "$entry"
   echo "Backing up $service..."
@@ -39,13 +76,32 @@ for entry in "${services[@]}"; do
     [[ -n "$ex" ]] && exclude_args+=(--exclude="$ex")
   done
 
-  # seerr: CIFS doesn't support symlinks, copy them as files instead
-  # tdarr: filenames with () break rsync temp files on CIFS, use --inplace
+  # Service-specific tweaks
   extra_opts=()
   [[ "$service" == "seerr" ]] && extra_opts+=(--copy-links)
   [[ "$service" == tdarr* ]] && extra_opts+=(--inplace)
+  [[ "$service" == "plex" ]] && extra_opts+=(--copy-links --exclude='*.db-shm' --exclude='*.db-wal')
 
-  if ! rsync $RSYNC_BASE_OPTS "${extra_opts[@]}" "${exclude_args[@]}" "$src/" "$dst/"; then
+  # Run rsync with hard wall-clock timeout so hung CIFS/NFS doesn't block all backups
+  rsync_output="$(timeout --signal=TERM --kill-after=20s "${RSYNC_TIMEOUT_SEC}s" \
+    rsync "${RSYNC_BASE_OPTS[@]}" "${extra_opts[@]}" "${exclude_args[@]}" "$src/" "$dst/" 2>&1)"
+  rsync_rc=$?
+
+  # Keep output visible in cron logs
+  [[ -n "$rsync_output" ]] && echo "$rsync_output"
+
+  # Outcome classification
+  if [[ $rsync_rc -eq 0 ]]; then
+    continue
+  elif [[ $rsync_rc -eq 124 || $rsync_rc -eq 137 ]]; then
+    # timeout(1): 124 on timeout, 137 if kill-after hit
+    WARNED+=("${service}(timeout)")
+  elif [[ $rsync_rc -eq 24 ]]; then
+    # vanished source files (transient)
+    WARNED+=("${service}(vanished)")
+  elif [[ "$service" == "plex" && $rsync_rc -eq 23 ]] && grep -Eqi "vanished|db-shm|db-wal" <<< "$rsync_output"; then
+    WARNED+=("${service}(volatile-db)")
+  else
     FAILED+=("$service")
   fi
 done
@@ -53,17 +109,25 @@ done
 TIMESTAMP=$(date)
 
 if [ ${#FAILED[@]} -eq 0 ]; then
-  curl -s \
-    -H "Title: ✅ Media Server Backup Complete" \
-    -H "Priority: low" \
-    -d "All configs backed up successfully at ${TIMESTAMP}." \
-    "$NTFY_URL"
+  if [ ${#WARNED[@]} -eq 0 ]; then
+    curl -s \
+      -H "Title: ✅ Media Server Backup Complete" \
+      -H "Priority: low" \
+      -d "All configs backed up successfully at ${TIMESTAMP}." \
+      "$NTFY_URL"
+  else
+    curl -s \
+      -H "Title: ⚠️ Media Server Backup Complete (with warnings)" \
+      -H "Priority: default" \
+      -d "Backup completed at ${TIMESTAMP}. Warnings: ${WARNED[*]}." \
+      "$NTFY_URL"
+  fi
 else
   curl -s \
     -H "Title: ❌ Media Server Backup Failed" \
     -H "Priority: high" \
-    -d "Backup completed at ${TIMESTAMP} with failures: ${FAILED[*]}" \
+    -d "Backup completed at ${TIMESTAMP} with failures: ${FAILED[*]} (warnings: ${WARNED[*]})." \
     "$NTFY_URL"
 fi
 
-echo "Backup completed at ${TIMESTAMP}" >> /var/log/opt-config-backup.log
+echo "Backup completed at ${TIMESTAMP}; failed=${FAILED[*]:-none}; warned=${WARNED[*]:-none}" >> "$LOG_FILE"

@@ -10,11 +10,9 @@ This repository runs a home media stack with Docker Compose, including VPN-route
 | qbittorrent | Torrent client (routed through gluetun) | 8080 (via gluetun) |
 | prowlarr | Indexer manager | 9696 |
 | flaresolverr | Cloudflare bypass proxy for indexers | 8191 |
-| configarr | Syncs Sonarr/Radarr CFs/profiles (run on demand) | (no published ports) |
+| profilarr | Syncs Sonarr/Radarr CFs/profiles | 6868 |
 | sonarr | TV automation | 8989 |
 | radarr | Movie automation | 7878 |
-| readarr-ebooks | Ebook automation | 8787 |
-| readarr-audiobooks | Audiobook automation | 8788 |
 | bazarr | Subtitle automation | 6767 |
 | jellyfin | Media server | 8096, 7359/udp, 1900/udp |
 | plex | Media server | host network |
@@ -86,10 +84,9 @@ docker compose down
 | qBittorrent | http://localhost:8080 |
 | Prowlarr | http://localhost:9696 |
 | FlareSolverr | http://localhost:8191 |
+| Profilarr | http://localhost:6868 |
 | Sonarr | http://localhost:8989 |
 | Radarr | http://localhost:7878 |
-| Readarr (ebooks) | http://localhost:8787 |
-| Readarr (audiobooks) | http://localhost:8788 |
 | Bazarr | http://localhost:6767 |
 | Jellyfin | http://localhost:8096 |
 | Seerr | http://localhost:5055 |
@@ -111,7 +108,7 @@ docker compose ps
 docker compose logs -f tdarr
 docker compose restart tdarr
 docker compose config
-docker compose run --rm configarr
+docker compose logs -f profilarr
 ```
 
 ## Notes

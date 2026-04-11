@@ -2,7 +2,7 @@ services:
   # GLUETUN (ProtonVPN)
 
   gluetun:
-    image: qmcgaw/gluetun:latest
+    image: qmcgaw/gluetun@sha256:183c74263a07f4c931979140ac99ff4fbc44dcb1ca5b055856ef580b0fafdf1c
     container_name: gluetun
     cap_add:
       - NET_ADMIN
@@ -36,7 +36,7 @@ services:
   # PROWLARR
 
   prowlarr:
-    image: linuxserver/prowlarr:latest
+    image: linuxserver/prowlarr@sha256:35f48abb3e976fcf077fae756866c582e4a90f8b24810ae4067b3558f7cdbbdf
     container_name: prowlarr
     hostname: prowlarr
     volumes:
@@ -53,7 +53,7 @@ services:
   # FLARESOLVERR (Cloudflare bypass proxy for indexers)
 
   flaresolverr:
-    image: ghcr.io/flaresolverr/flaresolverr:latest
+    image: ghcr.io/flaresolverr/flaresolverr@sha256:7962759d99d7e125e108e0f5e7f3cdbcd36161776d058d1d9b7153b92ef1af9e
     container_name: flaresolverr
     hostname: flaresolverr
     ports:
@@ -67,27 +67,26 @@ services:
     env_file:
       - ".env"
 
-  # CONFIGARR (Run on demand to sync arr custom formats/profiles)
+  # PROFILARR (Sync arr custom formats/profiles)
 
-  configarr:
-    image: ghcr.io/raydak-labs/configarr:latest
-    container_name: configarr
-    hostname: configarr
+  profilarr:
+    image: santiagosayshey/profilarr@sha256:8a514f8429cd33885166facc9eb6504fa9ded056c737609e5e8ef32ae0afb350
+    container_name: profilarr
+    hostname: profilarr
+    ports:
+      - 6868:6868
     volumes:
-      - /opt/appdata/configarr:/app/config
-      - /opt/appdata/configarr/repos:/app/repos
-      - /opt/appdata/configarr/cfs:/app/cfs
-      - /opt/appdata/configarr/templates:/app/templates
+      - /opt/appdata/profilarr:/config
     environment:
       - TZ=${TZ}
-    restart: "no"
+    restart: unless-stopped
     env_file:
       - ".env"
 
   # JELLYPLEX-WATCHED (Sync Jellyfin <-> Plex watch history)
 
   jellyplex-watched:
-    image: ghcr.io/luigi311/jellyplex-watched:latest
+    image: ghcr.io/luigi311/jellyplex-watched@sha256:e7d37b649ba8c92eca16f9f4a97e0c3ceabf326bd9f1dbe59cd44f13d2875afd
     container_name: jellyplex-watched
     environment:
       - PUID=1000
@@ -100,7 +99,7 @@ services:
   # Bazarr
 
   bazarr:
-    image: linuxserver/bazarr:latest
+    image: linuxserver/bazarr@sha256:21a4813c5ba120d72ac5f54869b790792bda0784205268eccbc204adb6dbe485
     container_name: bazarr
     hostname: bazarr
     volumes:
@@ -118,7 +117,7 @@ services:
   # SONARR
 
   sonarr:
-    image: linuxserver/sonarr:latest
+    image: linuxserver/sonarr@sha256:6854df9de20b8c82e1982604f39473d64dbb4c4584b1013f18f9ade1ee92af13
     container_name: sonarr
     hostname: sonarr
     volumes:
@@ -139,7 +138,7 @@ services:
   # RADARR
 
   radarr:
-    image: linuxserver/radarr:latest
+    image: linuxserver/radarr@sha256:cd70546fc97169788530386b42cf47ba1b16d091b4dc2264cd54099dd13c6f7f
     container_name: radarr
     hostname: radarr
     volumes:
@@ -158,50 +157,10 @@ services:
     env_file:
       - ".env"
 
-  # READARR (EBOOKS)
-
-  readarr-ebooks:
-    image: linuxserver/readarr:develop
-    container_name: readarr-ebooks
-    hostname: readarr-ebooks
-    volumes:
-      - /opt/appdata/readarr-ebooks:/config
-      - ${ARRPATH}Readarr/ebooks:/data/books
-      - ${ARRPATH}Readarr/ebooks-backup:/data/Backup
-      - ${ARRPATH}qbittorrent/downloads:/downloads
-    ports:
-      - 8787:8787
-    dns:
-      - 8.8.8.8
-      - 1.1.1.1
-    restart: unless-stopped
-    env_file:
-      - ".env"
-
-  # READARR (AUDIOBOOKS)
-
-  readarr-audiobooks:
-    image: linuxserver/readarr:develop
-    container_name: readarr-audiobooks
-    hostname: readarr-audiobooks
-    volumes:
-      - /opt/appdata/readarr-audiobooks:/config
-      - ${ARRPATH}Readarr/audiobooks:/data/books
-      - ${ARRPATH}Readarr/audiobooks-backup:/data/Backup
-      - ${ARRPATH}qbittorrent/downloads:/downloads
-    ports:
-      - 8788:8787
-    dns:
-      - 8.8.8.8
-      - 1.1.1.1
-    restart: unless-stopped
-    env_file:
-      - ".env"
-
   # JELLYFIN
 
   jellyfin:
-    image: linuxserver/jellyfin
+    image: linuxserver/jellyfin@sha256:e93bc100c6da07bd058678e4b634e4e71031fe840227e2ed03a1104f032bebe8
     container_name: jellyfin
     ports:
       - "8096:8096/tcp" # Jellyfin web interface
@@ -229,7 +188,7 @@ services:
   # PLEX
 
   plex:
-    image: plexinc/pms-docker:latest
+    image: plexinc/pms-docker@sha256:8b5bcdf7b506fe051aa1a0a0d464efdb3ad8c0fb1f8a4dfb27a8c489b609920c
     container_name: plex
     network_mode: host
     environment:
@@ -257,7 +216,7 @@ services:
   # SEERR (formerly Jellyseerr/Overseerr)
 
   seerr:
-    image: ghcr.io/seerr-team/seerr:latest
+    image: ghcr.io/seerr-team/seerr@sha256:b35ba0461c4a1033d117ac1e5968fd4cbe777899e4cbfbdeaf3d10a42a0eb7e9
     container_name: seerr
     hostname: seerr
     ports:
@@ -286,7 +245,7 @@ services:
   #  qBittorrent
 
   qbittorrent:
-    image: lscr.io/linuxserver/qbittorrent:latest
+    image: lscr.io/linuxserver/qbittorrent@sha256:474ef1f1c63fc060236e85cd6ec4a3232aea5a0d7a033c6bab9911039933f147
     container_name: qbittorrent
     network_mode: service:gluetun
     depends_on:
@@ -305,7 +264,7 @@ services:
   tdarr:
     container_name: tdarr
     hostname: tdarr
-    image: ghcr.io/haveagitgat/tdarr_acc:latest # Intel QuickSync enabled image
+    image: ghcr.io/haveagitgat/tdarr_acc@sha256:db9520315f83974cb5b8f2a8ed89a8a2be3d97d29575f54cbe4b5cc5e6daf5a5 # Intel QuickSync enabled image
     restart: unless-stopped
     network_mode: bridge
     ports:
@@ -339,7 +298,7 @@ services:
 
   # AUTOMATIC RIPPING MACHINE (ARM)
   arm-rippers:
-    image: 1337server/automatic-ripping-machine:latest
+    image: 1337server/automatic-ripping-machine@sha256:61275b5edebe634235ac35508c063749ee9116a6ecf88bad9470e410f18aafd1
     container_name: arm-rippers
     ports:
       - "8090:8080"
