@@ -9,3 +9,4 @@ state
 *.bak.*
 docker-compose.yml.bak*
 auto-upgrade.log
+*.log
