@@ -12,8 +12,8 @@ echo "-- Docker Compose Services --"
 docker compose ps --format "table {{.Service}}\t{{.State}}\t{{.Status}}"
 echo
 
-echo "-- Key Health (gluetun, plex, seerr, arm-rippers) --"
-for c in gluetun plex seerr arm-rippers; do
+echo "-- Key Health (gluetun, seerr, arm-rippers) --"
+for c in gluetun seerr arm-rippers; do
   if docker ps --format '{{.Names}}' | grep -qx "$c"; then
     st=$(docker inspect -f '{{.State.Status}}' "$c" 2>/dev/null || echo unknown)
     hl=$(docker inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' "$c" 2>/dev/null || echo unknown)
@@ -22,6 +22,9 @@ for c in gluetun plex seerr arm-rippers; do
     echo "$c: missing"
   fi
 done
+
+echo "plex: expected-missing on this host (separate LXC)"
+echo "jellyfin: expected-missing on this host (separate LXC)"
 
 echo
 echo "-- Disk Usage --"

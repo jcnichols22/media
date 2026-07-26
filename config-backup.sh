@@ -1,8 +1,5 @@
-#!/bin/bash
-
-# ==============================================================================
-# Backup service configs from /opt/appdata to /mnt/unraid_backups/media-server/configs/<Service>
-# ==============================================================================
+#!/usr/bin/env bash
+set -euo pipefail
 
 BACKUP_BASE="/mnt/unraid_backups/media-server/configs"
 NTFY_URL="http://192.168.0.119/media-server-backup-cron"
@@ -15,26 +12,28 @@ RSYNC_TIMEOUT_SEC=900         # hard cap per service (15 min)
 RSYNC_IO_TIMEOUT_SEC=120      # rsync stalls on I/O >120s fail fast
 
 # Base rsync options (applies to all services)
+# --no-owner/--no-group added because unraid_backups mount does not permit chown/chgrp
 RSYNC_BASE_OPTS=(
-  -av --delete --no-specials --no-devices
+  -av --delete --no-specials --no-devices --no-owner --no-group
   --exclude='*.sock' --exclude='*.pid' --exclude='ipc-socket'
   --timeout="$RSYNC_IO_TIMEOUT_SEC"
 )
 
-# Each entry: "src:dst[:exclude1:exclude2:...]"
+# Active services based on docker-compose.yml + existing /opt/appdata dirs
+# Removed jellyfin/plex (commented out in compose, no local path at /opt/appdata)
 services=(
   "prowlarr:/opt/appdata/prowlarr:${BACKUP_BASE}/prowlarr"
   "bazarr:/opt/appdata/bazarr:${BACKUP_BASE}/bazarr"
   "sonarr:/opt/appdata/sonarr:${BACKUP_BASE}/sonarr"
   "radarr:/opt/appdata/radarr:${BACKUP_BASE}/radarr"
-  "jellyfin:/opt/appdata/jellyfin:${BACKUP_BASE}/jellyfin:cache:transcodes"
-  "plex:/opt/appdata/plex:${BACKUP_BASE}/plex:Library/Application Support/Plex Media Server/Cache:Library/Application Support/Plex Media Server/Codecs:Library/Application Support/Plex Media Server/Crash Reports"
   "seerr:/opt/appdata/seerr:${BACKUP_BASE}/seerr"
   "qbittorrent:/opt/appdata/qbittorrent:${BACKUP_BASE}/qbittorrent"
   "tdarr-server:/opt/appdata/tdarr/server:${BACKUP_BASE}/tdarr/server"
   "tdarr-configs:/opt/appdata/tdarr/configs:${BACKUP_BASE}/tdarr/configs"
   "tdarr-logs:/opt/appdata/tdarr/logs:${BACKUP_BASE}/tdarr/logs"
   "arm:/opt/appdata/arm:${BACKUP_BASE}/arm"
+  "flaresolverr:/opt/appdata/flaresolverr:${BACKUP_BASE}/flaresolverr"
+  "profilarr:/opt/appdata/profilarr:${BACKUP_BASE}/profilarr"
 )
 
 # Preflight: fail fast if backup target is unavailable or not writable
@@ -67,6 +66,12 @@ fi
 for entry in "${services[@]}"; do
   IFS=":" read -r service src dst excludes_str <<< "$entry"
   echo "Backing up $service..."
+  if [[ ! -d "$src" ]]; then
+    WARNED+=("${service}(source-missing)")
+    echo "Skipping $service: source path missing ($src)"
+    continue
+  fi
+
   mkdir -p "$dst"
 
   # Build exclude args from colon-separated excludes
@@ -80,7 +85,6 @@ for entry in "${services[@]}"; do
   extra_opts=()
   [[ "$service" == "seerr" ]] && extra_opts+=(--copy-links)
   [[ "$service" == tdarr* ]] && extra_opts+=(--inplace)
-  [[ "$service" == "plex" ]] && extra_opts+=(--copy-links --exclude='*.db-shm' --exclude='*.db-wal')
 
   # Run rsync with hard wall-clock timeout so hung CIFS/NFS doesn't block all backups
   rsync_output="$(timeout --signal=TERM --kill-after=20s "${RSYNC_TIMEOUT_SEC}s" \
@@ -99,8 +103,6 @@ for entry in "${services[@]}"; do
   elif [[ $rsync_rc -eq 24 ]]; then
     # vanished source files (transient)
     WARNED+=("${service}(vanished)")
-  elif [[ "$service" == "plex" && $rsync_rc -eq 23 ]] && grep -Eqi "vanished|db-shm|db-wal" <<< "$rsync_output"; then
-    WARNED+=("${service}(volatile-db)")
   else
     FAILED+=("$service")
   fi

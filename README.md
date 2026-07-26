@@ -2,11 +2,21 @@
 
 This repository runs a home media stack with Docker Compose, including VPN-routed downloading, media automation, streaming, request management, transcoding, and disc ripping.
 
+## Proxmox Split-Container Topology
+
+This stack is designed for a split deployment:
+
+- Ubuntu LXC: all core automation services in this compose stack
+- Jellyfin LXC: Jellyfin service and its config/data
+- Plex LXC: Plex service and its config/data
+
+To preserve users/watch history/plugins, restore Jellyfin/Plex directly inside their own LXCs before bringing those media servers online.
+
 ## Current Services
 
 | Service | Purpose | Port(s) |
 |---|---|---|
-| gluetun | ProtonVPN WireGuard tunnel for qBittorrent | 8080, 6881/tcp, 6881/udp |
+| gluetun | ProtonVPN OpenVPN tunnel with Proton port forwarding for qBittorrent | 8080 |
 | qbittorrent | Torrent client (routed through gluetun) | 8080 (via gluetun) |
 | prowlarr | Indexer manager | 9696 |
 | flaresolverr | Cloudflare bypass proxy for indexers | 8191 |
@@ -20,6 +30,19 @@ This repository runs a home media stack with Docker Compose, including VPN-route
 | jellyplex-watched | Plex/Jellyfin watched-state sync | (no published ports) |
 | tdarr | Transcoding + health checks (Intel QuickSync) | 8265, 8266 |
 | arm-rippers | Automated Ripping Machine | 8090 |
+
+## Jellyfin/Plex Default Behavior
+
+`jellyfin` and `plex` remain defined in `docker-compose.yml` but are disabled by default using profile `media-servers-disabled`.
+
+- Default startup (recommended for this host):
+   ```bash
+   docker compose up -d --remove-orphans
+   ```
+- Start including Jellyfin/Plex from this host (only if you intentionally want that):
+   ```bash
+   docker compose --profile media-servers-disabled up -d --remove-orphans
+   ```
 
 ## Image Management Policy (Pinned Digests)
 
@@ -164,18 +187,19 @@ docker compose logs -f profilarr
 - Keep app databases/configs on native Linux storage (not mergerfs/FUSE) to avoid SQLite locking/corruption issues.
 - If you remove or rename services, run with `--remove-orphans` to clean old containers.
 
-## Scheduled Upgrades (Every 3 Weeks)
+## Scheduled Upgrades (Cadence-Based, Weekly Default)
 
 A scheduled upgrade script is available at:
 
 - `/home/josh/media/auto-upgrade-3week.sh`
 
 Default scheduler behavior:
-- Runs from cron on Saturday midnight.
-- Self-gates to execute only every 3 weeks (anchor date in script).
+- Runs from cron on your chosen schedule.
+- Self-gates to execute every `UPGRADE_CADENCE_DAYS` (default: `7`).
 - Upgrades service-by-service with automatic rollback per service on failure.
 - Sends summary notifications to ntfy topic:
   - `media-server-upgrades`
+- Skips `jellyfin` and `plex` by default (`INCLUDE_DISABLED_MEDIA_SERVERS=0`).
 
 Safety behavior:
 - Validates compose before applying changes.
@@ -189,10 +213,16 @@ Manual test run:
 FORCE_RUN=1 /home/josh/media/auto-upgrade-3week.sh
 ```
 
+Include Jellyfin/Plex in an upgrade run (only if this host runs them):
+
+```bash
+INCLUDE_DISABLED_MEDIA_SERVERS=1 FORCE_RUN=1 /home/josh/media/auto-upgrade-3week.sh
+```
+
 Cron entry example (user `josh`):
 
 ```bash
-0 0 * * 6 /home/josh/media/auto-upgrade-3week.sh
+0 3 * * * /home/josh/media/auto-upgrade-3week.sh
 ```
 
 ## Health Monitoring
@@ -200,6 +230,7 @@ Cron entry example (user `josh`):
 Health monitor script:
 
 - `/home/josh/media/health-monitor.sh`
+- `/home/josh/media/sync-qbittorrent-port.sh` is invoked by the health monitor to keep qBittorrent's listening port aligned with Gluetun's current Proton forwarded port.
 
 Checks:
 - container running state

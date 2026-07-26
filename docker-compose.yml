@@ -10,20 +10,19 @@ services:
       - /dev/net/tun:/dev/net/tun
     environment:
       - VPN_SERVICE_PROVIDER=protonvpn
-      - VPN_TYPE=wireguard
-      - WIREGUARD_PRIVATE_KEY=${PROTONVPN_WG_PRIVATE_KEY}
-      - WIREGUARD_ADDRESSES=${PROTONVPN_WG_ADDRESSES}
-      - WIREGUARD_ENDPOINT_IP=${PROTONVPN_WG_ENDPOINT_IP}
-      - WIREGUARD_PUBLIC_KEY=${PROTONVPN_WG_PUBLIC_KEY}
-      - WIREGUARD_ALLOWED_IPS=${PROTONVPN_WG_ALLOWED_IPS}
-      - WIREGUARD_DNS=${PROTONVPN_WG_DNS}
-      - FIREWALL_INPUT_PORTS=8080,6881
+      - VPN_TYPE=openvpn
+      - OPENVPN_USER=${PROTONVPN_USER}+pmp
+      - OPENVPN_PASSWORD=${PROTONVPN_PASSWORD}
+      - SERVER_COUNTRIES=Netherlands,Sweden,Switzerland,Canada
+      - PORT_FORWARD_ONLY=on
+      - VPN_PORT_FORWARDING=on
+      - FIREWALL_INPUT_PORTS=8080
       - DOT=off
+      - HEALTH_TARGET_ADDRESS=1.1.1.1:443
+      - HEALTH_VPN_DURATION_INITIAL=20s
       - TZ=${TZ}
     ports:
       - 8080:8080 # qBittorrent WebUI
-      - 6881:6881 # qBittorrent TCP
-      - 6881:6881/udp # qBittorrent UDP
     healthcheck:
       test: [ "CMD", "/gluetun-entrypoint", "healthcheck" ]
       interval: 30s
@@ -36,13 +35,13 @@ services:
   # PROWLARR
 
   prowlarr:
-    image: linuxserver/prowlarr@sha256:35f48abb3e976fcf077fae756866c582e4a90f8b24810ae4067b3558f7cdbbdf
+    image: linuxserver/prowlarr:latest
     container_name: prowlarr
     hostname: prowlarr
     volumes:
       - /opt/appdata/prowlarr:/config
       - ${ARRPATH}Prowlarr/backup:/data/Backup
-      - ${ARRPATH}qbittorrent/downloads:/downloads
+      - ${ARRPATH}qbittorrent/downloads:/data/downloads
 
     ports:
       - 9696:9696
@@ -53,7 +52,7 @@ services:
   # FLARESOLVERR (Cloudflare bypass proxy for indexers)
 
   flaresolverr:
-    image: ghcr.io/flaresolverr/flaresolverr@sha256:7962759d99d7e125e108e0f5e7f3cdbcd36161776d058d1d9b7153b92ef1af9e
+    image: ghcr.io/flaresolverr/flaresolverr:latest
     container_name: flaresolverr
     hostname: flaresolverr
     ports:
@@ -70,7 +69,7 @@ services:
   # PROFILARR (Sync arr custom formats/profiles)
 
   profilarr:
-    image: santiagosayshey/profilarr@sha256:8a514f8429cd33885166facc9eb6504fa9ded056c737609e5e8ef32ae0afb350
+    image: santiagosayshey/profilarr:latest
     container_name: profilarr
     hostname: profilarr
     ports:
@@ -86,7 +85,7 @@ services:
   # JELLYPLEX-WATCHED (Sync Jellyfin <-> Plex watch history)
 
   jellyplex-watched:
-    image: ghcr.io/luigi311/jellyplex-watched@sha256:e7d37b649ba8c92eca16f9f4a97e0c3ceabf326bd9f1dbe59cd44f13d2875afd
+    image: ghcr.io/luigi311/jellyplex-watched:latest
     container_name: jellyplex-watched
     environment:
       - PUID=1000
@@ -99,7 +98,7 @@ services:
   # Bazarr
 
   bazarr:
-    image: linuxserver/bazarr@sha256:21a4813c5ba120d72ac5f54869b790792bda0784205268eccbc204adb6dbe485
+    image: linuxserver/bazarr:latest
     container_name: bazarr
     hostname: bazarr
     volumes:
@@ -117,7 +116,7 @@ services:
   # SONARR
 
   sonarr:
-    image: linuxserver/sonarr@sha256:6854df9de20b8c82e1982604f39473d64dbb4c4584b1013f18f9ade1ee92af13
+    image: linuxserver/sonarr:latest
     container_name: sonarr
     hostname: sonarr
     volumes:
@@ -125,7 +124,7 @@ services:
       - ${ARRPATH}Sonarr/backup:/data/Backup
       - ${ARRPATH}Sonarr/tvseries:/data/tvshows
       - ${ARRPATH}Sonarr/anime-tvshows:/data/anime-tvshows
-      - ${ARRPATH}qbittorrent/downloads:/downloads
+      - ${ARRPATH}qbittorrent/downloads:/data/downloads
     ports:
       - 8989:8989
     dns:
@@ -138,7 +137,7 @@ services:
   # RADARR
 
   radarr:
-    image: linuxserver/radarr@sha256:cd70546fc97169788530386b42cf47ba1b16d091b4dc2264cd54099dd13c6f7f
+    image: linuxserver/radarr:latest
     container_name: radarr
     hostname: radarr
     volumes:
@@ -146,7 +145,7 @@ services:
       - ${ARRPATH}Radarr/movies:/data/movies
       - ${ARRPATH}Radarr/anime-movies:/data/anime-movies
       - ${ARRPATH}Radarr/backup:/data/Backup
-      - ${ARRPATH}qbittorrent/downloads:/downloads
+      - ${ARRPATH}qbittorrent/downloads:/data/downloads
       - ${ARRPATH}ARM/media/completed/movies:/arm-completed
     ports:
       - 7878:7878
@@ -172,7 +171,6 @@ services:
       - ${ARRPATH}Radarr/anime-movies:/data/AnimeMovies
       - ${ARRPATH}Sonarr/tvseries:/data/TVShows
       - ${ARRPATH}Sonarr/anime-tvshows:/data/AnimeTVShows
-      - ${ARRPATH}Lidarr/music:/data/Music
     devices:
       - /dev/dri/renderD128:/dev/dri/renderD128
       - /dev/dri/card1:/dev/dri/card1
@@ -187,48 +185,48 @@ services:
 
   # PLEX
 
-  plex:
-    image: plexinc/pms-docker@sha256:8b5bcdf7b506fe051aa1a0a0d464efdb3ad8c0fb1f8a4dfb27a8c489b609920c
-    container_name: plex
-    network_mode: host
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=America/New_York
-      - PLEX_CLAIM= # Optional: add your Plex claim token here
-    devices:
-      - /dev/dri/renderD128:/dev/dri/renderD128
-      - /dev/dri/card1:/dev/dri/card1
-    group_add:
-      - "992" # render group
-      - "44" # video group
-    volumes:
-      - /opt/appdata/plex:/config
-      - ${ARRPATH}Radarr/movies:/data/Movies
-      - ${ARRPATH}Radarr/anime-movies:/data/AnimeMovies
-      - ${ARRPATH}Sonarr/tvseries:/data/TVShows
-      - ${ARRPATH}Sonarr/anime-tvshows:/data/AnimeTVShows
-      - ${ARRPATH}Lidarr/music:/data/Music
-    restart: unless-stopped
-    env_file:
-      - ".env"
+  # plex:
+  #   image: plexinc/pms-docker@sha256:8b5bcdf7b506fe051aa1a0a0d464efdb3ad8c0fb1f8a4dfb27a8c489b609920c
+  #   container_name: plex
+  #   profiles:
+  #     - media-servers-disabled
+  #   network_mode: host
+  #   environment:
+  #     - PUID=1000
+  #     - PGID=1000
+  #     - TZ=America/New_York
+  #     - PLEX_CLAIM= # Optional: add your Plex claim token here
+  #   devices:
+  #     - /dev/dri/renderD128:/dev/dri/renderD128
+  #     - /dev/dri/card1:/dev/dri/card1
+  #   group_add:
+  #     - "992" # render group
+  #     - "44" # video group
+  #   volumes:
+  #     - /opt/appdata/plex:/config
+  #     - ${ARRPATH}Radarr/movies:/data/Movies
+  #     - ${ARRPATH}Radarr/anime-movies:/data/AnimeMovies
+  #     - ${ARRPATH}Sonarr/tvseries:/data/TVShows
+  #     - ${ARRPATH}Sonarr/anime-tvshows:/data/AnimeTVShows
+  #     - ${ARRPATH}Lidarr/music:/data/Music
+  #   restart: unless-stopped
+  #   env_file:
+  #     - ".env"
 
   # SEERR (formerly Jellyseerr/Overseerr)
 
   seerr:
-    image: ghcr.io/seerr-team/seerr@sha256:b35ba0461c4a1033d117ac1e5968fd4cbe777899e4cbfbdeaf3d10a42a0eb7e9
+    image: ghcr.io/seerr-team/seerr:latest
     container_name: seerr
     hostname: seerr
     ports:
       - "5055:5055"
     volumes:
       - /opt/appdata/seerr:/app/config
-      - ${ARRPATH}Jellyfin/config:/app/jellyfin # optional read-only mapping to let Seerr read Jellyfin's config
       - ${ARRPATH}Radarr/movies:/data/Movies # Allow importing/requesting files
       - ${ARRPATH}Radarr/anime-movies:/data/AnimeMovies
       - ${ARRPATH}Sonarr/tvseries:/data/TVShows
       - ${ARRPATH}Sonarr/anime-tvshows:/data/AnimeTVShows
-      - ${ARRPATH}Lidarr/music:/data/Music # If music requests supported (optional)
     healthcheck:
       test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:5055/api/v1/status" ]
       interval: 30s
@@ -253,10 +251,9 @@ services:
         condition: service_healthy
     environment:
       - WEBUI_PORT=8080
-      - TORRENTING_PORT=6881
     volumes:
       - /opt/appdata/qbittorrent:/config
-      - ${ARRPATH}qbittorrent/downloads:/downloads
+      - ${ARRPATH}qbittorrent/downloads:/data/downloads
     restart: unless-stopped
     env_file:
       - ".env"
@@ -264,7 +261,7 @@ services:
   tdarr:
     container_name: tdarr
     hostname: tdarr
-    image: ghcr.io/haveagitgat/tdarr_acc@sha256:db9520315f83974cb5b8f2a8ed89a8a2be3d97d29575f54cbe4b5cc5e6daf5a5 # Intel QuickSync enabled image
+    image: ghcr.io/haveagitgat/tdarr_acc:latest 
     restart: unless-stopped
     network_mode: bridge
     ports:
@@ -298,7 +295,7 @@ services:
 
   # AUTOMATIC RIPPING MACHINE (ARM)
   arm-rippers:
-    image: 1337server/automatic-ripping-machine@sha256:61275b5edebe634235ac35508c063749ee9116a6ecf88bad9470e410f18aafd1
+    image: 1337server/automatic-ripping-machine:latest
     container_name: arm-rippers
     ports:
       - "8090:8080"

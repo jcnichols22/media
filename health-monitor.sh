@@ -19,6 +19,10 @@ mkdir -p "$STATE_DIR"
 issues=()
 warns=()
 
+if ! /home/josh/media/sync-qbittorrent-port.sh >> /home/josh/media/qbittorrent-port-sync.log 2>&1; then
+  warns+=("qb-port-sync-failed")
+fi
+
 # Container status/health from compose scope
 if docker compose ps --format json > "$TMP_PS" 2>/dev/null; then
   while IFS= read -r line; do
