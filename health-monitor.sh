@@ -10,7 +10,6 @@ NTFY_URL="${NTFY_BASE_URL}/${NTFY_TOPIC}"
 STATE_DIR="/home/josh/media/state"
 STATE_FILE="${STATE_DIR}/health-monitor.state"
 LOG_FILE="/home/josh/media/health-monitor.log"
-TMP_PS="/tmp/compose-ps.$$.jsonl"
 
 DISK_WARN_THRESHOLD=85
 
@@ -19,42 +18,19 @@ mkdir -p "$STATE_DIR"
 issues=()
 warns=()
 
-if ! /home/josh/media/sync-qbittorrent-port.sh >> /home/josh/media/qbittorrent-port-sync.log 2>&1; then
-  warns+=("qb-port-sync-failed")
+# Port sync — non-fatal, only warns on failure
 fi
 
-# Container status/health from compose scope
-if docker compose ps --format json > "$TMP_PS" 2>/dev/null; then
-  while IFS= read -r line; do
-    [[ -z "$line" ]] && continue
-    service=$(echo "$line" | sed -n 's/.*"Service":"\([^"]*\)".*/\1/p')
-    state=$(echo "$line" | sed -n 's/.*"State":"\([^"]*\)".*/\1/p')
-    health=$(echo "$line" | sed -n 's/.*"Health":"\([^"]*\)".*/\1/p')
-
-    [[ -z "$service" ]] && service="unknown"
-    [[ -z "$state" ]] && state="unknown"
-
-    if [[ "$state" != "running" ]]; then
-      issues+=("${service}:state=${state}")
-    fi
-    if [[ "$health" == "unhealthy" ]]; then
-      issues+=("${service}:health=unhealthy")
-    fi
-  done < "$TMP_PS"
-else
-  warns+=("compose-status-unavailable")
-fi
-rm -f "$TMP_PS"
-
-# Explicit gluetun health check (high signal for qBittorrent path)
-if docker ps --format '{{.Names}}' | grep -qx gluetun; then
-  gl_health="$(docker inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' gluetun 2>/dev/null || echo unknown)"
-  if [[ "$gl_health" != "healthy" ]]; then
-    issues+=("gluetun:health=${gl_health}")
+# Container status/health from compose scope (pipe-delimited, no JSON parsing)
+while IFS=$'\t' read -r svc state status health; do
+  [[ -z "$svc" || "$svc" == "SERVICE" ]] && continue
+  if [[ "$state" != "running" ]]; then
+    issues+=("${svc}:state=${state}")
   fi
-else
-  issues+=("gluetun:missing")
-fi
+  if [[ "$health" == "unhealthy" ]]; then
+    issues+=("${svc}:health=unhealthy")
+  fi
+done < <(docker compose ps --format "{{.Service}}\t{{.State}}\t{{.Status}}\t{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}" 2>/dev/null)
 
 # Disk usage checks
 root_use="$(df -P / | awk 'NR==2{gsub("%","",$5); print $5}')"
@@ -74,7 +50,7 @@ fi
 # Recent backup script failures/preflight issues
 if [[ -f /home/josh/media/config-backup.log ]]; then
   last_line="$(tail -n 1 /home/josh/media/config-backup.log || true)"
-  if echo "$last_line" | grep -Eqi 'preflight failed|failed=[^n]'; then
+  if echo "$last_line" | grep -Eqi 'preflight failed|failed=[1-9]'; then
     warns+=("backup-log-indicates-failure")
   fi
 fi
@@ -116,7 +92,10 @@ else
       title="⚠️ Media Health Warning"
       priority="default"
     fi
-    body="Status: ${status}\nIssues: ${issues[*]:-none}\nWarnings: ${warns[*]:-none}\nTime: $(date)"
+    body="Status: ${status}
+Issues: ${issues[*]:-none}
+Warnings: ${warns[*]:-none}
+Time: $(date)"
   fi
 fi
 

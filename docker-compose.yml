@@ -2,7 +2,7 @@ services:
   # GLUETUN (ProtonVPN)
 
   gluetun:
-    image: qmcgaw/gluetun@sha256:183c74263a07f4c931979140ac99ff4fbc44dcb1ca5b055856ef580b0fafdf1c
+    image: qmcgaw/gluetun@sha256:4fabcc11bc0c43e56de00d6705e1e60005877e0bee00d6e4dbf5d22dd0bf891c
     container_name: gluetun
     cap_add:
       - NET_ADMIN
@@ -17,7 +17,6 @@ services:
       - PORT_FORWARD_ONLY=on
       - VPN_PORT_FORWARDING=on
       - FIREWALL_INPUT_PORTS=8080
-      - DOT=off
       - HEALTH_TARGET_ADDRESS=1.1.1.1:443
       - HEALTH_VPN_DURATION_INITIAL=20s
       - TZ=${TZ}
@@ -159,7 +158,7 @@ services:
   # JELLYFIN
 
   jellyfin:
-    image: linuxserver/jellyfin@sha256:e93bc100c6da07bd058678e4b634e4e71031fe840227e2ed03a1104f032bebe8
+    image: linuxserver/jellyfin@sha256:bb455a7a3073d7977323e04f3bd2012a7798aa0e0e66f2ba144b48df9dac9a88
     container_name: jellyfin
     ports:
       - "8096:8096/tcp" # Jellyfin web interface
@@ -243,7 +242,7 @@ services:
   #  qBittorrent
 
   qbittorrent:
-    image: lscr.io/linuxserver/qbittorrent@sha256:474ef1f1c63fc060236e85cd6ec4a3232aea5a0d7a033c6bab9911039933f147
+    image: lscr.io/linuxserver/qbittorrent@sha256:1a4641fa759dee784708ed277ece10adbbc5810ebb8bb9fdfe1cf00031f5ab2b
     container_name: qbittorrent
     network_mode: service:gluetun
     depends_on:
