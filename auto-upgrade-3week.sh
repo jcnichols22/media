@@ -13,23 +13,24 @@ LOCK_FILE="/tmp/media-auto-upgrade.lock"
 
 # Exclude gluetun+qbittorrent from unattended upgrades (higher blast radius)
 services=(
-  flaresolverr
-  jellyplex-watched
-  profilarr
-  bazarr
-  sonarr
-  radarr
-  prowlarr
-  seerr
-  jellyfin
-  plex
-  tdarr
   arm-rippers
+  bazarr
+  flaresolverr
+  gluetun
+  jellyfin
+  jellyplex-watched
+  plex
+  profilarr
+  prowlarr
+  qbittorrent
+  radarr
+  seerr
+  sonarr
+  tdarr
 )
 
 declare -A repo_by_service=(
   [flaresolverr]="ghcr.io/flaresolverr/flaresolverr"
-  [jellyplex-watched]="ghcr.io/luigi311/jellyplex-watched"
   [profilarr]="santiagosayshey/profilarr"
   [bazarr]="linuxserver/bazarr"
   [sonarr]="linuxserver/sonarr"
@@ -39,7 +40,10 @@ declare -A repo_by_service=(
   [jellyfin]="linuxserver/jellyfin"
   [plex]="plexinc/pms-docker"
   [tdarr]="ghcr.io/haveagitgat/tdarr_acc"
+  [qbittorrent]="lscr.io/linuxserver/qbittorrent"
   [arm-rippers]="1337server/automatic-ripping-machine"
+  [jellyplex-watched]="ghcr.io/luigi311/jellyplex-watched"
+  [gluetun]="qmcgaw/gluetun"
 )
 
 log() { echo "[$(date '+%F %T')] $*" | tee -a "$LOG_FILE"; }
@@ -93,16 +97,42 @@ for svc in "${services[@]}"; do
     continue
   fi
 
-  # Current digest from compose
-  current_line=$(grep -E "^[[:space:]]*image:[[:space:]]*${repo}@sha256:[0-9a-f]{64}" docker-compose.yml | head -n1 || true)
+  # Current digest from compose (handles both @sha256 and :latest)
+  current_line=$(grep -E "^[[:space:]]*image:[[:space:]]*${repo}(@sha256:[0-9a-f]{64})?" docker-compose.yml | head -n1 || true)
   if [[ -z "$current_line" ]]; then
-    skipped+=("$svc(no-pinned-line)")
+    skipped+=("$svc(not-in-compose)")
     continue
   fi
-  current_digest=$(echo "$current_line" | sed -E 's#.*@sha256:([0-9a-f]{64}).*#\1#')
+  if echo "$current_line" | grep -q '@sha256:'; then
+    current_digest=$(echo "$current_line" | sed -E 's#.*@sha256:([0-9a-f]{64}).*#\1#')
+  else
+    current_digest=$(docker manifest inspect "${repo}:latest" | python3 -c "
+import json,sys
+d=json.load(sys.stdin)
+for m in d.get('manifests',[]):
+    p=m.get('platform',{})
+    if p.get('architecture')=='amd64' and p.get('os')=='linux':
+        print(m['digest'].replace('sha256:',''))
+        sys.exit(0)
+if d.get('manifests'): print(d['manifests'][0]['digest'].replace('sha256:',''))
+" 2>/dev/null || true)
+    if [[ -z "$current_digest" ]]; then
+      skipped+=("$svc(digest-lookup)")
+      continue
+    fi
+  fi
 
-  # Latest index digest
-  latest_digest=$(docker buildx imagetools inspect "${repo}:latest" | awk '/^Digest:/ {gsub("sha256:","",$2); print $2; exit}' || true)
+  # Latest digest
+  latest_digest=$(docker manifest inspect "${repo}:latest" | python3 -c "
+import json,sys
+d=json.load(sys.stdin)
+for m in d.get('manifests',[]):
+    p=m.get('platform',{})
+    if p.get('architecture')=='amd64' and p.get('os')=='linux':
+        print(m['digest'].replace('sha256:',''))
+        sys.exit(0)
+if d.get('manifests'): print(d['manifests'][0]['digest'].replace('sha256:',''))
+" 2>/dev/null || true)
   if [[ -z "$latest_digest" ]]; then
     failed+=("$svc(digest-lookup)")
     continue
@@ -119,19 +149,7 @@ for svc in "${services[@]}"; do
   cp docker-compose.yml "$backup"
 
   # Replace digest for this repo only
-  python3 - <<PY
-import re
-from pathlib import Path
-p=Path('docker-compose.yml')
-s=p.read_text()
-repo=r'${repo}'
-pat=rf'(image:\s*{re.escape(repo)}@sha256:)[0-9a-f]{{64}}'
-s2,n=re.subn(pat, rf'\1${latest_digest}', s, count=1)
-if n!=1:
-    raise SystemExit('replace failed')
-p.write_text(s2)
-print('updated')
-PY
+  python3 /tmp/upgrade_replace_digest.py "${repo}" "${latest_digest}" docker-compose.yml
 
   if ! docker compose config -q; then
     log "Compose invalid after editing $svc; rolling back"
@@ -155,13 +173,23 @@ PY
     continue
   fi
 
-  # Basic post-check
-  sleep 8
-  state=$(docker inspect -f '{{.State.Status}}' "$svc" 2>/dev/null || echo unknown)
-  health=$(docker inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' "$svc" 2>/dev/null || echo unknown)
+  # Basic post-check with retries for slow-starting services (e.g. gluetun)
+  max_wait=90
+  waited=0
+  state=unknown
+  health=unknown
+  while (( waited < max_wait )); do
+    state=$(docker inspect -f '{{.State.Status}}' "$svc" 2>/dev/null || echo unknown)
+    health=$(docker inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' "$svc" 2>/dev/null || echo unknown)
+    if [[ "$state" == "running" && "$health" != "unhealthy" ]]; then
+      break
+    fi
+    sleep 15
+    waited=$((waited + 15))
+  done
 
   if [[ "$state" != "running" || "$health" == "unhealthy" ]]; then
-    log "Post-check failed for $svc (state=$state health=$health); rolling back"
+    log "Post-check failed for $svc (state=$state health=$health) after ${waited}s; rolling back"
     cp "$backup" docker-compose.yml
     docker compose up -d "$svc" || true
     failed+=("$svc(postcheck-${state}-${health})")
