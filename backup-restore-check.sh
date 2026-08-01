@@ -30,6 +30,8 @@ services=(
   "tdarr-configs:tdarr/configs:Tdarr_Server_Config.json"
   "tdarr-logs:tdarr/logs:Tdarr_Server_Log.txt:Tdarr_Node_Log.txt"
   "arm:arm:arm.yaml"
+  "jellyfin:jellyfin:config.xml:database.xml"
+  "gluetun:gluetun"
   "flaresolverr:flaresolverr"
   "profilarr:profilarr:profilarr.db"
 )

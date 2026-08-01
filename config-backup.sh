@@ -20,7 +20,7 @@ RSYNC_BASE_OPTS=(
 )
 
 # Active services based on docker-compose.yml + existing /opt/appdata dirs
-# Removed jellyfin/plex (commented out in compose, no local path at /opt/appdata)
+
 services=(
   "prowlarr:/opt/appdata/prowlarr:${BACKUP_BASE}/prowlarr"
   "bazarr:/opt/appdata/bazarr:${BACKUP_BASE}/bazarr"
@@ -32,6 +32,8 @@ services=(
   "tdarr-configs:/opt/appdata/tdarr/configs:${BACKUP_BASE}/tdarr/configs"
   "tdarr-logs:/opt/appdata/tdarr/logs:${BACKUP_BASE}/tdarr/logs"
   "arm:/opt/appdata/arm:${BACKUP_BASE}/arm"
+  "jellyfin:/opt/appdata/jellyfin:${BACKUP_BASE}/jellyfin"
+  "gluetun:/opt/appdata/gluetun:${BACKUP_BASE}/gluetun"
   "flaresolverr:/opt/appdata/flaresolverr:${BACKUP_BASE}/flaresolverr"
   "profilarr:/opt/appdata/profilarr:${BACKUP_BASE}/profilarr"
 )
@@ -87,9 +89,10 @@ for entry in "${services[@]}"; do
   [[ "$service" == tdarr* ]] && extra_opts+=(--inplace)
 
   # Run rsync with hard wall-clock timeout so hung CIFS/NFS doesn't block all backups
+  rsync_output=""
+  rsync_rc=0
   rsync_output="$(timeout --signal=TERM --kill-after=20s "${RSYNC_TIMEOUT_SEC}s" \
-    rsync "${RSYNC_BASE_OPTS[@]}" "${extra_opts[@]}" "${exclude_args[@]}" "$src/" "$dst/" 2>&1)"
-  rsync_rc=$?
+    rsync "${RSYNC_BASE_OPTS[@]}" "${extra_opts[@]}" "${exclude_args[@]}" "$src/" "$dst/" 2>&1)" || rsync_rc=$?
 
   # Keep output visible in cron logs
   [[ -n "$rsync_output" ]] && echo "$rsync_output"
